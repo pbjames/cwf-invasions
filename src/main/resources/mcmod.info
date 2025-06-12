@@ -1,0 +1,16 @@
+[
+	{
+		"modid": "invasions",
+		"name": "CFW Invasions",
+		"description": "A generic invasions mod for the Craft Warfare modpack",
+		"version": "${version}",
+		"mcversion": "1.12.2",
+		"url": "",
+		"updateUrl": "",
+		"authorList": ["dodgyjames"],
+		"credits": "",
+		"logoFile": "",
+		"screenshots": [],
+		"dependencies": []
+	}
+]
