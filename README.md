@@ -1,29 +1,9 @@
-# Modern, minimal Forge 1.12 template
-
-It's kinda annoying to set up forge 1.12 workspaces in the year of our lord 2023 and for some reason [noone wants to tell you how to do it](https://www.reddit.com/r/feedthebeast/comments/11wykah/). Here's one, using ForgeGradle 5.1 and Gradle 7.6.1, so, modern stuff. It is fairly minimal and unopinionated.
-
-**The license for this template itself is CC0, public domain.** I don't care what you do with it and no credit is required. I'm not going to include a separate `LICENSE` file because it's an extra thing you have to delete when setting up a mod.
-
-## Usage
-
-1. Clone this repo, delete the `.git` folder to disassociate your clone from this repo, then run `git init`.
-2. "Poke ForgeGradle": run `./gradlew build` or whatever. ForgeGradle will whirr to life and set up the dev environment for you.
-   * Give it time, it takes like six minutes on my PC from an empty ForgeGradle cache. No, it's not stuck.
-3. Open this project in IntelliJ or your code editor of choice.
-4. (optional) Generate "run configurations" by running the appropriate Gradle task, depending on your IDE:
-   * IntelliJ: `genIntelliJRuns` (if you're looking in the "gradle tool window" on the right, it's under the "forgegradle runs" folder)
-   * Eclipse: `genEclipseRuns`
-   * Visual Studio Code: `genVSCodeRuns`
-
-Next, make it yours:
-
-1. In `gradle.properties`, replace `group`, `name`, and `version`.
-2. In `src/main/resources/mcmod.info`, replace `modid`, `name`, `description`, `authorList`, and any other properties you feel like filling out.
-3. In `src/main/java/com/example/SampleMod112`, fill out the `MODID`, `NAME`, and `VERSION` strings again, and move the class to your own package (not `com.example`).
-   * Or just delete it and make a new `@Mod` class, I'm not your mom.
-
-Finally, delete this file and replace it with your own `README`. Good luck in your modding endeavour.
-
+# CFW Invasions
+## Development
+``sh
+./gradlew build
+./gradlew runClient
+``
 ## Common problems
 
 ### `Caused by: java.lang.IllegalStateException: ProjectScopeServices has been closed.` in Gradle setup 
