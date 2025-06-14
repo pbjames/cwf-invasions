@@ -29,7 +29,7 @@ public class CapabilityProviderEntities implements ICapabilitySerializable<NBTTa
   public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
     if (capability == CapabilityStarLevel.CAPABILITY_STAR_LEVEL) {
       logger.info("StarLevel capability has been provided");
-      return ((T) this.starLevel);
+      return (T) this.starLevel;
     }
     return null;
   }
