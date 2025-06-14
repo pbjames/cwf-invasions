@@ -15,7 +15,9 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -68,13 +70,15 @@ public class InvasionManager {
 
   @SubscribeEvent
   public static void onTickServerFast(ServerTickEvent event) {
-    if (!invasionHappeningNow) return;
-    World world = DimensionManager.getWorld(0);
-    if (world == null) return;
-    if (world.getTotalWorldTime() % FAST_CHECK_TIME != 0) return;
-    MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-    for (EntityPlayerMP player : server.getPlayerList().getPlayers()) {
-      invade(player);
+    if (event.phase == Phase.START) {
+      if (!invasionHappeningNow) return;
+      World world = DimensionManager.getWorld(0);
+      if (world == null) return;
+      if (world.getTotalWorldTime() % FAST_CHECK_TIME != 0) return;
+      MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+      for (EntityPlayerMP player : server.getPlayerList().getPlayers()) {
+        invade(player);
+      }
     }
   }
 
@@ -82,6 +86,9 @@ public class InvasionManager {
     BlockPos spawnPos = findAirBlockNear(player);
     World world = player.world;
     EntityZombie zombie = new EntityZombie(world);
+    //zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
+    //zombie.tasks.addTask(2, new EntityAIOmniAttackMelee(zombie, 4.0D));
+    zombie.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
     zombie.setPosition(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
     world.spawnEntity(zombie);
   }
