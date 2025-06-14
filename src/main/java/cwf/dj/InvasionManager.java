@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import net.minecraft.block.state.IBlockState;
@@ -35,6 +36,7 @@ public class InvasionManager {
   public static final Logger LOGGER = CWFInvasions.logger;
   public static boolean invasionHappeningNow;
   public static boolean graceIsNow;
+  public static final Random RANDOM = new Random();
 
   @SubscribeEvent
   public static void onTickServerSlow(ServerTickEvent event) {
@@ -77,14 +79,18 @@ public class InvasionManager {
   }
 
   public static void invade(EntityPlayerMP player) {
-    BlockPos spawnPos = findAirBlockNear(player, MAX_INVADE_DIST);
+    BlockPos spawnPos = findAirBlockNear(player);
     World world = player.world;
     EntityZombie zombie = new EntityZombie(world);
     zombie.setPosition(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
     world.spawnEntity(zombie);
   }
 
-  public static BlockPos findAirBlockNear(EntityPlayer player, int maxDistance) {
+  public static BlockPos findAirBlockNear(EntityPlayer player) {
+    // TODO: Worry about optimisation later
+    LOGGER.info("Searching space for spawn");
+    int maxDistSq = MAX_INVADE_DIST * MAX_INVADE_DIST;
+    int minDistSq = MIN_INVADE_DIST * MIN_INVADE_DIST;
     World world = player.world;
     BlockPos start = player.getPosition();
     Set<BlockPos> visited = new HashSet<>();
@@ -93,26 +99,38 @@ public class InvasionManager {
     visited.add(start);
     while (!queue.isEmpty()) {
       BlockPos pos = queue.poll();
-      if (start.distanceSq(pos) > maxDistance * maxDistance) continue;
+      double distFromStart = start.distanceSq(pos);
+      LOGGER.info(
+          "Distance from start: {}, min dist sq: {}, max dist sq: {}",
+          distFromStart,
+          minDistSq,
+          maxDistSq);
       IBlockState state = world.getBlockState(pos);
-      if (state.getBlock() == Blocks.AIR) {
-        return pos;
-      }
+      if (state.getBlock() == Blocks.AIR
+          && (distFromStart > minDistSq)
+          && (distFromStart < maxDistSq)) return pos;
       for (BlockPos offset : getNeighborOffsets()) {
         BlockPos neighbor = pos.add(offset);
+        LOGGER.info("Try neighbour: {}", neighbor);
         if (!visited.contains(neighbor)) {
+          LOGGER.info("Add neighbour: {}", neighbor);
           visited.add(neighbor);
           queue.add(neighbor);
         }
       }
     }
+    LOGGER.info("Not satisfied");
     return player.getPosition();
   }
 
   private static List<BlockPos> getNeighborOffsets() {
-    // Y-offsets should be last so we can spawn our mobs closest to ground
+    // drunk walk
+    int xOffs = RANDOM.nextInt(4) - 2;
+    int zOffs = RANDOM.nextInt(4) - 2;
     return Arrays.asList(
         new BlockPos(0, -1, 0),
+        new BlockPos(xOffs, 0, 0),
+        new BlockPos(0, 0, zOffs),
         new BlockPos(1, 0, 0),
         new BlockPos(-1, 0, 0),
         new BlockPos(0, 0, 1),
