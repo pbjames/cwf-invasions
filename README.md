@@ -3,18 +3,25 @@
 ## Usage
 
 Example config to place in `config/invasions/[filename].yml`:
+
 ```yaml
 !!cwf.dj.InvasionConfig
-startCondition: NIGHT
-endingCondition: MOBCOUNT_XS
-maintainedPopulation: 10
-healthScalingWeight: 2
 damageScalingWeight: 1
+endingCondition: MOBCOUNT
+healthScalingWeight: 2
+maintainedPopulation: 10
 mobClasses:
-- {ent: 'minecraft:zombie', type: CQC, weight: 5}
-- {ent: 'minecraft:skeleton', type: SUPPORT, weight: 2}
+  - { ent: "minecraft:zombie", type: CQC, weight: 5 }
+  - { ent: "minecraft:skeleton", type: SUPPORT, weight: 2 }
+mobCountToEnd: 120
+startCondition: NIGHT
+timeToEndTicks: 6000
 ```
-NOTE: `template.yml` is ignored by default
+
+NOTE: `template.yml` is ignored by default, diy ‼
+
+`endingCondition` can take on values `MOBCOUNT,TIME` - remember to update the respective threshold field.
+`startCondition` can take on the values `NIGHT,DAY,FORTNIGHT,FULL_MOON`.
 
 ## Development
 

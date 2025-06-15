@@ -15,14 +15,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -34,56 +33,110 @@ import org.apache.logging.log4j.Logger;
 
 @Mod.EventBusSubscriber
 public class CWFInvasionsManager {
-  public static boolean invasionHappeningNow;
+  private static boolean invasionHappeningNow = false;
+  private static long timeAtStart;
+  private static int slainSinceStart;
   public static boolean graceIsNow;
   public static List<Entity> activeMobs = new ArrayList<>();
   public static final Logger LOGGER = CWFInvasions.logger;
   public static final Random RANDOM = new Random();
+  public static final TextComponentString INVASION_STARTED_MSG =
+      new TextComponentString("§l§cINVASION STARTED§r");
+  public static final TextComponentString INVASION_ENDED_MSG =
+      new TextComponentString("§l§6INVASION ENDED§r");
+  // INFO: For multiple invasions we pick the first match for start conditions
+  // and stick with that for the end condition
+  // Perhaps in the future, we could manager multiple invasions simultaneously
+  public static InvasionConfig chosenConfig;
 
   @SubscribeEvent
-  public static void onTickServerSlow(ServerTickEvent event) {
+  public static void onTickServer(ServerTickEvent event) {
+    if (event.phase != Phase.START) return;
+    World world = DimensionManager.getWorld(0);
+    if (world == null) return;
     int slowCheckTime = Configuration.common.slowTickTime;
-    if (event.phase == Phase.START) {
-      World world = DimensionManager.getWorld(0);
-      if (world == null) return;
-      if (world.getTotalWorldTime() % slowCheckTime != 0) return;
-      MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-      List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+    int fastCheckTime = Configuration.common.fastTickTime;
+    MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+    List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+    if (world.getTotalWorldTime() % fastCheckTime == 0) {
+      for (EntityPlayerMP player : players) {
+        if (getInvasion()) invade(player, players.size());
+      }
+    } if (world.getTotalWorldTime() % slowCheckTime == 0) {
       players.forEach(player -> checkSetInvasion(player));
     }
   }
 
-  @SubscribeEvent
-  public static void onTickServerFast(ServerTickEvent event) {
-    int fastCheckTime = Configuration.common.fastTickTime;
-    if (event.phase == Phase.START) {
-      if (!invasionHappeningNow) return;
-      World world = DimensionManager.getWorld(0);
-      if (world == null) return;
-      if (world.getTotalWorldTime() % fastCheckTime != 0) return;
-      MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-      List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
-      players.forEach(player -> invade(player, players.size()));
-    }
-  }
-
   public static void removeDeadMobs() {
+    int oldCount = activeMobs.size();
     activeMobs = activeMobs.stream().filter(mob -> !mob.isDead).collect(Collectors.toList());
+    slainSinceStart += oldCount - activeMobs.size();
   }
 
   public static void checkSetInvasion(@Nonnull EntityPlayerMP player) {
-    InventoryPlayer playerInv = player.inventory;
-    if (playerInv == null) return;
-    int currentItem = player.inventory.currentItem;
-    Item heldItem = playerInv.mainInventory.get(currentItem).getItem();
-    if (heldItem == Items.CHICKEN) {
-      invasionHappeningNow = true;
-      LOGGER.info("Invasion starting");
-    } else if (heldItem == Items.COOKED_CHICKEN) {
-      LOGGER.info("Invasion ending");
-      invasionHappeningNow = false;
+    if (getInvasion()) {
+      checkForEnding(chosenConfig);
+    } else {
+      for (InvasionConfig config : InvasionsConfiguration.configs) {
+        if (checkForStarting(config)) {
+          chosenConfig = config;
+          return;
+        }
+      }
     }
-    LOGGER.info("Held item during check: ", heldItem.toString());
+  }
+
+  private static boolean checkForStarting(InvasionConfig config) {
+    World world = DimensionManager.getWorld(0);
+    LOGGER.info("Want to start invasion, daytime: {}", world.isDaytime());
+    switch (config.startCondition) {
+      case FORTNIGHT:
+        if (world.getTotalWorldTime() % (14 * 24000) == 0) {
+          startInvasion();
+          return true;
+        }
+        break;
+      case FULL_MOON:
+        if (world.getMoonPhase() == 0) {
+          startInvasion();
+          return true;
+        }
+        break;
+      case NIGHT:
+        if (!world.isDaytime()) {
+          startInvasion();
+          return true;
+        }
+        break;
+      case DAY:
+        if (world.isDaytime()) {
+          startInvasion();
+          return true;
+        }
+        break;
+    }
+    return false;
+  }
+
+  private static boolean checkForEnding(InvasionConfig config) {
+    MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+    List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+    switch (config.endingCondition) {
+      case MOBCOUNT:
+        if (slainSinceStart * players.size() >= config.mobCountToEnd) {
+          endInvasion();
+          return true;
+        }
+        break;
+      case TIME:
+        long timeDelta = DimensionManager.getWorld(0).getTotalWorldTime() - timeAtStart;
+        if (timeDelta >= config.timeToEndTicks) {
+          endInvasion();
+          return true;
+        }
+        break;
+    }
+    return false;
   }
 
   public static void invade(EntityPlayerMP player, int playerCount) {
@@ -143,6 +196,28 @@ public class CWFInvasionsManager {
         new BlockPos(0, 0, 1),
         new BlockPos(0, 0, -1),
         new BlockPos(0, 1, 0));
+  }
+
+  public static void startInvasion() {
+    LOGGER.info("Invasion starting");
+    MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+    List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+    players.forEach(player -> player.sendMessage(INVASION_STARTED_MSG));
+    invasionHappeningNow = true;
+    slainSinceStart = 0;
+    timeAtStart = DimensionManager.getWorld(0).getTotalWorldTime();
+  }
+
+  public static void endInvasion() {
+    LOGGER.info("Invasion ending");
+    MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+    List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+    players.forEach(player -> player.sendMessage(INVASION_ENDED_MSG));
+    invasionHappeningNow = false;
+  }
+
+  public static boolean getInvasion() {
+    return invasionHappeningNow;
   }
 
   // @SubscribeEvent

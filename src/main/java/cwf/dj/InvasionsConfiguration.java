@@ -37,39 +37,29 @@ public class InvasionsConfiguration {
 }
 
 class InvasionConfig {
-  public InvadeCondition startCondition = InvadeCondition.HOLDINGCHICKEN;
-  public InvadeThresh endingCondition = InvadeThresh.MOBCOUNT_XS;
+  public InvadeStartCondition startCondition = InvadeStartCondition.NIGHT;
+  public InvadeEndCondition endingCondition = InvadeEndCondition.MOBCOUNT;
+  public int mobCountToEnd = 120;
+  public int timeToEndTicks = 300 * 20;
   public int maintainedPopulation = 10;
   public int healthScalingWeight = 2;
   public int damageScalingWeight = 1;
   public InvadeMobClass[] mobClasses = {
-    new InvadeMobClass("minecraft:zombie", 5),
+    new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC),
     new InvadeMobClass("minecraft:skeleton", 2, InvadeMobType.SUPPORT)
   };
 }
 
-enum InvadeCondition {
-  // TODO: Flesh these out
-  GAMESTAGE,
-  HOLDINGCHICKEN
+enum InvadeStartCondition {
+  DAY,
+  NIGHT,
+  FORTNIGHT,
+  FULL_MOON;
 }
 
-enum InvadeThresh {
-  MOBCOUNT_HIGH(500),
-  MOBCOUNT_MEDIUM(200),
-  MOBCOUNT_LOW(70),
-  MOBCOUNT_XS(40),
-  TIME_60M(4800 * 20),
-  TIME_30M(2400 * 20),
-  TIME_20M(1200 * 20),
-  TIME_10M(600 * 20),
-  TIME_5M(300 * 20);
-
-  public final int value;
-
-  InvadeThresh(int value) {
-    this.value = value;
-  }
+enum InvadeEndCondition {
+  MOBCOUNT,
+  TIME
 }
 
 class InvadeMobClass {
@@ -82,15 +72,8 @@ class InvadeMobClass {
     this.weight = weight;
     this.type = type;
   }
-
-  public InvadeMobClass(String ent, int weight) {
-    this.ent = ent;
-    this.weight = weight;
-    this.type = InvadeMobType.CQC;
-  }
-
-  public InvadeMobClass(String ent) {
-    this.ent = ent;
+  public InvadeMobClass() {
+    this.ent = "default";
     this.weight = 1;
     this.type = InvadeMobType.CQC;
   }
