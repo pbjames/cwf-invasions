@@ -34,11 +34,11 @@ import org.apache.logging.log4j.Logger;
 
 @Mod.EventBusSubscriber
 public class CWFInvasionsManager {
-  public static final int FAST_CHECK_TIME = 5 * 20;
-  public static final int SLOW_CHECK_TIME = 10 * 20;
-  public static final int MAX_INVADE_DIST = 2 * 16;
-  public static final int MIN_INVADE_DIST = 5; // personal space
-  public static final int MAINTENANCE_LVL = 5;
+  public static final int FAST_CHECK_TIME = Configuration.common.fastTickTime;
+  public static final int SLOW_CHECK_TIME = Configuration.common.slowTickTime;
+  public static final int MAX_INVADE_DIST = Configuration.common.maxInvadeDistance;
+  public static final int MIN_INVADE_DIST = Configuration.common.minInvadeDistance;
+  public static final int MAINTENANCE_LVL = Configuration.common.mobMaintainCount;
   public static final Logger LOGGER = CWFInvasions.logger;
   public static boolean invasionHappeningNow;
   public static List<Entity> activeMobs = new ArrayList<>();
@@ -52,9 +52,8 @@ public class CWFInvasionsManager {
       if (world == null) return;
       if (world.getTotalWorldTime() % SLOW_CHECK_TIME != 0) return;
       MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-      for (EntityPlayerMP player : server.getPlayerList().getPlayers()) {
-        checkSetInvasion(player);
-      }
+      List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+      players.forEach(player -> checkSetInvasion(player));
     }
   }
 
@@ -67,9 +66,7 @@ public class CWFInvasionsManager {
       if (world.getTotalWorldTime() % FAST_CHECK_TIME != 0) return;
       MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
       List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
-      for (EntityPlayerMP player : players) {
-        invade(player, players.size());
-      }
+      players.forEach(player -> invade(player, players.size()));
     }
   }
 

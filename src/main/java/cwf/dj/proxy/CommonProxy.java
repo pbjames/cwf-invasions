@@ -1,9 +1,13 @@
 package cwf.dj.proxy;
 
+import cwf.dj.CWFInvasions;
 import cwf.dj.capabilities.CapabilityStarLevel;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
+import net.minecraftforge.common.config.Config;
+import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -25,4 +29,11 @@ public class CommonProxy {
 
   @SubscribeEvent
   public static void registerItems(RegistryEvent.Register<Item> event) {}
+
+  @SubscribeEvent
+  public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
+    if (event.getModID().equals(CWFInvasions.MODID)) {
+      ConfigManager.sync(CWFInvasions.MODID, Config.Type.INSTANCE);
+    }
+  }
 }
