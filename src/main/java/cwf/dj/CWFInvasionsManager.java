@@ -1,5 +1,6 @@
 package cwf.dj;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -7,8 +8,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -30,13 +33,15 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import org.apache.logging.log4j.Logger;
 
 @Mod.EventBusSubscriber
-public class InvasionManager {
+public class CWFInvasionsManager {
   public static final int FAST_CHECK_TIME = 5 * 20;
   public static final int SLOW_CHECK_TIME = 10 * 20;
   public static final int MAX_INVADE_DIST = 2 * 16;
   public static final int MIN_INVADE_DIST = 5; // personal space
+  public static final int MAINTENANCE_LVL = 5;
   public static final Logger LOGGER = CWFInvasions.logger;
   public static boolean invasionHappeningNow;
+  public static List<Entity> activeMobs = new ArrayList<>();
   public static boolean graceIsNow;
   public static final Random RANDOM = new Random();
 
@@ -51,6 +56,25 @@ public class InvasionManager {
         checkSetInvasion(player);
       }
     }
+  }
+
+  @SubscribeEvent
+  public static void onTickServerFast(ServerTickEvent event) {
+    if (event.phase == Phase.START) {
+      if (!invasionHappeningNow) return;
+      World world = DimensionManager.getWorld(0);
+      if (world == null) return;
+      if (world.getTotalWorldTime() % FAST_CHECK_TIME != 0) return;
+      MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+      List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+      for (EntityPlayerMP player : players) {
+        invade(player, players.size());
+      }
+    }
+  }
+
+  public static void removeDeadMobs() {
+    activeMobs = activeMobs.stream().filter(mob -> !mob.isDead).collect(Collectors.toList());
   }
 
   public static void checkSetInvasion(@Nonnull EntityPlayerMP player) {
@@ -68,29 +92,18 @@ public class InvasionManager {
     LOGGER.info("Held item during check: ", heldItem.toString());
   }
 
-  @SubscribeEvent
-  public static void onTickServerFast(ServerTickEvent event) {
-    if (event.phase == Phase.START) {
-      if (!invasionHappeningNow) return;
-      World world = DimensionManager.getWorld(0);
-      if (world == null) return;
-      if (world.getTotalWorldTime() % FAST_CHECK_TIME != 0) return;
-      MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-      for (EntityPlayerMP player : server.getPlayerList().getPlayers()) {
-        invade(player);
-      }
-    }
-  }
-
-  public static void invade(EntityPlayerMP player) {
+  public static void invade(EntityPlayerMP player, int playerCount) {
     BlockPos spawnPos = findAirBlockNear(player);
     World world = player.world;
+    removeDeadMobs();
+    if (activeMobs.size() >= MAINTENANCE_LVL * playerCount) return;
     EntityZombie zombie = new EntityZombie(world);
     // zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
     // zombie.tasks.addTask(2, new EntityAIOmniAttackMelee(zombie, 4.0D));
     zombie.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
     zombie.setPosition(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
     world.spawnEntity(zombie);
+    activeMobs.add(zombie);
   }
 
   public static BlockPos findAirBlockNear(EntityPlayer player) {
