@@ -86,8 +86,8 @@ public class InvasionManager {
     BlockPos spawnPos = findAirBlockNear(player);
     World world = player.world;
     EntityZombie zombie = new EntityZombie(world);
-    //zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
-    //zombie.tasks.addTask(2, new EntityAIOmniAttackMelee(zombie, 4.0D));
+    // zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
+    // zombie.tasks.addTask(2, new EntityAIOmniAttackMelee(zombie, 4.0D));
     zombie.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
     zombie.setPosition(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
     world.spawnEntity(zombie);
@@ -107,31 +107,23 @@ public class InvasionManager {
     while (!queue.isEmpty()) {
       BlockPos pos = queue.poll();
       double distFromStart = start.distanceSq(pos);
-      LOGGER.info(
-          "Distance from start: {}, min dist sq: {}, max dist sq: {}",
-          distFromStart,
-          minDistSq,
-          maxDistSq);
       IBlockState state = world.getBlockState(pos);
       if (state.getBlock() == Blocks.AIR
           && (distFromStart > minDistSq)
           && (distFromStart < maxDistSq)) return pos;
       for (BlockPos offset : getNeighborOffsets()) {
         BlockPos neighbor = pos.add(offset);
-        LOGGER.info("Try neighbour: {}", neighbor);
         if (!visited.contains(neighbor)) {
-          LOGGER.info("Add neighbour: {}", neighbor);
           visited.add(neighbor);
           queue.add(neighbor);
         }
       }
     }
-    LOGGER.info("Not satisfied");
+    LOGGER.info("Position not satisfied, being aggressive");
     return player.getPosition();
   }
 
   private static List<BlockPos> getNeighborOffsets() {
-    // drunk walk
     int xOffs = RANDOM.nextInt(4) - 2;
     int zOffs = RANDOM.nextInt(4) - 2;
     return Arrays.asList(
