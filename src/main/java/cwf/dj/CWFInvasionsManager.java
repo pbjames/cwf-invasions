@@ -34,23 +34,19 @@ import org.apache.logging.log4j.Logger;
 
 @Mod.EventBusSubscriber
 public class CWFInvasionsManager {
-  public static final int FAST_CHECK_TIME = Configuration.common.fastTickTime;
-  public static final int SLOW_CHECK_TIME = Configuration.common.slowTickTime;
-  public static final int MAX_INVADE_DIST = Configuration.common.maxInvadeDistance;
-  public static final int MIN_INVADE_DIST = Configuration.common.minInvadeDistance;
-  public static final int MAINTENANCE_LVL = Configuration.common.mobMaintainCount;
-  public static final Logger LOGGER = CWFInvasions.logger;
   public static boolean invasionHappeningNow;
-  public static List<Entity> activeMobs = new ArrayList<>();
   public static boolean graceIsNow;
+  public static List<Entity> activeMobs = new ArrayList<>();
+  public static final Logger LOGGER = CWFInvasions.logger;
   public static final Random RANDOM = new Random();
 
   @SubscribeEvent
   public static void onTickServerSlow(ServerTickEvent event) {
+    int slowCheckTime = Configuration.common.slowTickTime;
     if (event.phase == Phase.START) {
       World world = DimensionManager.getWorld(0);
       if (world == null) return;
-      if (world.getTotalWorldTime() % SLOW_CHECK_TIME != 0) return;
+      if (world.getTotalWorldTime() % slowCheckTime != 0) return;
       MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
       List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
       players.forEach(player -> checkSetInvasion(player));
@@ -59,11 +55,12 @@ public class CWFInvasionsManager {
 
   @SubscribeEvent
   public static void onTickServerFast(ServerTickEvent event) {
+    int fastCheckTime = Configuration.common.fastTickTime;
     if (event.phase == Phase.START) {
       if (!invasionHappeningNow) return;
       World world = DimensionManager.getWorld(0);
       if (world == null) return;
-      if (world.getTotalWorldTime() % FAST_CHECK_TIME != 0) return;
+      if (world.getTotalWorldTime() % fastCheckTime != 0) return;
       MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
       List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
       players.forEach(player -> invade(player, players.size()));
@@ -92,8 +89,9 @@ public class CWFInvasionsManager {
   public static void invade(EntityPlayerMP player, int playerCount) {
     BlockPos spawnPos = findAirBlockNear(player);
     World world = player.world;
+    int maintenanceLevel = Configuration.common.mobMaintainCount;
     removeDeadMobs();
-    if (activeMobs.size() >= MAINTENANCE_LVL * playerCount) return;
+    if (activeMobs.size() >= maintenanceLevel * playerCount) return;
     EntityZombie zombie = new EntityZombie(world);
     // zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
     // zombie.tasks.addTask(2, new EntityAIOmniAttackMelee(zombie, 4.0D));
@@ -106,8 +104,8 @@ public class CWFInvasionsManager {
   public static BlockPos findAirBlockNear(EntityPlayer player) {
     // TODO: Worry about optimisation later
     LOGGER.info("Searching space for spawn");
-    int maxDistSq = MAX_INVADE_DIST * MAX_INVADE_DIST;
-    int minDistSq = MIN_INVADE_DIST * MIN_INVADE_DIST;
+    int maxDistSq = Configuration.common.maxInvadeDistance * Configuration.common.maxInvadeDistance;
+    int minDistSq = Configuration.common.minInvadeDistance * Configuration.common.minInvadeDistance;
     World world = player.world;
     BlockPos start = player.getPosition();
     Set<BlockPos> visited = new HashSet<>();

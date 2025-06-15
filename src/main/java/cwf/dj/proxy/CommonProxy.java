@@ -31,8 +31,10 @@ public class CommonProxy {
   public static void registerItems(RegistryEvent.Register<Item> event) {}
 
   @SubscribeEvent
-  public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
+  public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
+    CWFInvasions.logger.info("config reload");
     if (event.getModID().equals(CWFInvasions.MODID)) {
+      CWFInvasions.logger.info("twas our mod");
       ConfigManager.sync(CWFInvasions.MODID, Config.Type.INSTANCE);
     }
   }
