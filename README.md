@@ -1,12 +1,38 @@
-# CFW Invasions
+# CWF Invasions
+
+## Usage
+
+Example config to place in `config/invasions/[filename].yml`:
+```yaml
+!!cwf.dj.InvasionConfig
+startCondition: NIGHT
+endingCondition: MOBCOUNT_XS
+maintainedPopulation: 10
+healthScalingWeight: 2
+damageScalingWeight: 1
+mobClasses:
+- {ent: 'minecraft:zombie', type: CQC, weight: 5}
+- {ent: 'minecraft:skeleton', type: SUPPORT, weight: 2}
+```
+NOTE: `template.yml` is ignored by default
+
 ## Development
-``sh
+
+To build the project:
+
+```sh
 ./gradlew build
+```
+
+And run it:
+
+```sh
 ./gradlew runClient
-``
+```
+
 ## Common problems
 
-### `Caused by: java.lang.IllegalStateException: ProjectScopeServices has been closed.` in Gradle setup 
+### `Caused by: java.lang.IllegalStateException: ProjectScopeServices has been closed.` in Gradle setup
 
 [Goofy ass ForgeGradle bug](https://github.com/MinecraftForge/ForgeGradle/issues/563) that's been around forever. Run `./gradlew stop` in the terminal. Even if you think you didn't start a Gradle daemon, try it anyway - IntelliJ likes to start them on its own when it decides to "sync".
 
@@ -18,7 +44,7 @@ If you use the `runClient`/`runServer` Gradle tasks, this shouldn't happen, beca
 
 For IntelliJ: open the run config dropdown and select `Edit Configurations...`, select a problematic configuration, and in the `JDK or JRE` dropdown, select a Java 8 JDK. (The one Gradle provisioned for you is in `(user home directory)/.gradle/jdks`.)
 
-(While "opening the game with the `runClient` task" and "opening the game with an IDE run config" *appear* similar on the surface, they're actually wholly separate systems, which is why Gradle can download a Java 8 JDK and ForgeGradle can generate an IDE run config, but you have to plug them together yourself.)
+(While "opening the game with the `runClient` task" and "opening the game with an IDE run config" _appear_ similar on the surface, they're actually wholly separate systems, which is why Gradle can download a Java 8 JDK and ForgeGradle can generate an IDE run config, but you have to plug them together yourself.)
 
 ### `Unable to read a class file correctly` / `There was a problem reading the entry module-info.class in the jar (blah blah)` / `probably a corrupt zip` when starting the game
 
