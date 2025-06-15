@@ -1,7 +1,10 @@
 package cwf.dj.proxy;
 
 import cwf.dj.CWFInvasions;
+import cwf.dj.InvasionsConfiguration;
 import cwf.dj.capabilities.CapabilityStarLevel;
+import java.io.IOException;
+import java.nio.file.Path;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraftforge.common.config.Config;
@@ -12,17 +15,36 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 @Mod.EventBusSubscriber
 public class CommonProxy {
+  private static Path modConfigDir;
+
   public void preInit(FMLPreInitializationEvent e) {
     CapabilityStarLevel.register();
+    modConfigDir = e.getModConfigurationDirectory().toPath();
+    modConfigDir = modConfigDir.resolve("invasions");
+    if (!modConfigDir.toFile().exists()) modConfigDir.toFile().mkdirs();
+    try {
+      InvasionsConfiguration.loadFrom(modConfigDir);
+    } catch (IOException e1) {
+      e1.printStackTrace();
+    }
   }
 
   public void init(FMLInitializationEvent e) {}
 
   public void postInit(FMLPostInitializationEvent e) {}
+
+  public void onServerStopping(FMLServerStoppingEvent e) {
+    try {
+      InvasionsConfiguration.writeTemplate(modConfigDir);
+    } catch (IOException e1) {
+      e1.printStackTrace();
+    }
+  }
 
   @SubscribeEvent
   public static void registerBlocks(RegistryEvent.Register<Block> event) {}

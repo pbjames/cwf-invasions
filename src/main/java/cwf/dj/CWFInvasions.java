@@ -6,6 +6,8 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
+
 import org.apache.logging.log4j.Logger;
 
 @Mod(modid = CWFInvasions.MODID, name = CWFInvasions.NAME, version = CWFInvasions.VERSION)
@@ -19,6 +21,11 @@ public class CWFInvasions {
   public static CommonProxy proxy;
 
   @Mod.Instance public static CWFInvasions instance;
+
+  @Mod.EventHandler
+  public void onServerStopping(FMLServerStoppingEvent e) {
+    proxy.onServerStopping(e);
+  }
 
   @Mod.EventHandler
   public void preinit(FMLPreInitializationEvent preinit) {
