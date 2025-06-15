@@ -31,6 +31,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import org.apache.logging.log4j.Logger;
 
+import cwf.dj.tasks.EntityAIOmniSetTarget;
+
 @Mod.EventBusSubscriber
 public class CWFInvasionsManager {
   private static boolean invasionHappeningNow = false;
@@ -146,7 +148,7 @@ public class CWFInvasionsManager {
     removeDeadMobs();
     if (activeMobs.size() >= maintenanceLevel * playerCount) return;
     EntityZombie zombie = new EntityZombie(world);
-    // zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
+    zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
     // zombie.tasks.addTask(2, new EntityAIOmniAttackMelee(zombie, 4.0D));
     zombie.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
     zombie.setPosition(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
