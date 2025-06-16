@@ -8,6 +8,7 @@ import cwf.dj.tasks.EntityAIOmniSetTarget;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.apache.logging.log4j.Logger;
 
 @Mod.EventBusSubscriber
 public class CWFInvasionsManager {
+  public static final Random rand = new Random();
   private static boolean invasionHappeningNow = false;
   private static long timeAtStart;
   private static int slainSinceStart;
@@ -81,13 +83,15 @@ public class CWFInvasionsManager {
     EntityEntry entry = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(mobClass.ent));
     try {
       Entity realEntity = entry.getEntityClass().getConstructor(World.class).newInstance(world);
-      EntityCreature zombie = (EntityCreature) realEntity;
-      zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
-      zombie.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(zombie, 1.0D, player));
-      zombie.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
-      zombie.setPosition(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
-      world.spawnEntity(zombie);
-      activeMobs.add(zombie);
+      if (realEntity instanceof EntityCreature) {
+        EntityCreature zombie = (EntityCreature) realEntity;
+        zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
+        zombie.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(zombie, 1.0D, player));
+        zombie.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
+      }
+      realEntity.setPosition(spawnPos.getX(), spawnPos.getY() + mobClass.yOffset, spawnPos.getZ());
+      world.spawnEntity(realEntity);
+      activeMobs.add(realEntity);
     } catch (InstantiationException
         | IllegalAccessException
         | IllegalArgumentException
@@ -102,7 +106,7 @@ public class CWFInvasionsManager {
     int oldCount = activeMobs.size();
     activeMobs =
         activeMobs.stream()
-            .filter(mob -> !mob.isDead || !mob.isAddedToWorld())
+            .filter(mob -> !mob.isDead || mob.isAddedToWorld())
             .collect(Collectors.toList());
     slainSinceStart += oldCount - activeMobs.size();
   }
@@ -181,23 +185,27 @@ public class CWFInvasionsManager {
   }
 
   public static BlockPos findAirBlockNear(EntityPlayer player) {
-    // TODO: Worry about optimisation later
     LOGGER.info("Searching space for spawn");
-    int maxDistSq = Configuration.common.maxInvadeDistance * Configuration.common.maxInvadeDistance;
-    int minDistSq = Configuration.common.minInvadeDistance * Configuration.common.minInvadeDistance;
+    int maxDist = Configuration.common.maxInvadeDistance;
+    int minDist = Configuration.common.minInvadeDistance;
+    int maxDistSq = maxDist * maxDist;
+    int minDistSq = minDist * minDist;
+    int randomX = (rand.nextBoolean() ? -1 : 1) * rand.nextInt(maxDist - minDist) + minDist;
+    int randomZ = (rand.nextBoolean() ? -1 : 1) * rand.nextInt(maxDist - minDist) + minDist;
     World world = player.world;
     BlockPos start = player.getPosition();
     Set<BlockPos> visited = new HashSet<>();
     Queue<BlockPos> queue = new LinkedList<>();
-    queue.add(start);
+    queue.add(new BlockPos(start.add(randomX, player.getEyeHeight(), randomZ)));
     visited.add(start);
     while (!queue.isEmpty()) {
       BlockPos pos = queue.poll();
-      double distFromStart = start.distanceSq(pos);
+      BlockPos adjustedPos = castDownBlockPos(world, pos);
       IBlockState state = world.getBlockState(pos);
+      double distFromStart = start.distanceSq(adjustedPos);
       if (state.getBlock() == Blocks.AIR
           && (distFromStart > minDistSq)
-          && (distFromStart < maxDistSq)) return pos;
+          && (distFromStart < maxDistSq)) return adjustedPos.add(0, player.getEyeHeight(), 0);
       for (BlockPos offset : getNeighborOffsets()) {
         BlockPos neighbor = pos.add(offset);
         if (!visited.contains(neighbor)) {
@@ -211,17 +219,24 @@ public class CWFInvasionsManager {
   }
 
   private static List<BlockPos> getNeighborOffsets() {
-    int xOffs = RANDOM.nextInt(4) - 2;
-    int zOffs = RANDOM.nextInt(4) - 2;
-    return Arrays.asList(
-        new BlockPos(0, -1, 0),
-        new BlockPos(xOffs, 0, 0),
-        new BlockPos(0, 0, zOffs),
-        new BlockPos(1, 0, 0),
-        new BlockPos(-1, 0, 0),
-        new BlockPos(0, 0, 1),
-        new BlockPos(0, 0, -1),
-        new BlockPos(0, 1, 0));
+    List<BlockPos> positions =
+        Arrays.asList(
+            new BlockPos(0, -1, 0),
+            new BlockPos(1, 0, 0),
+            new BlockPos(-1, 0, 0),
+            new BlockPos(0, 0, 1),
+            new BlockPos(0, 0, -1),
+            new BlockPos(0, 1, 0));
+    Collections.shuffle(positions);
+    return positions;
+  }
+
+  private static BlockPos castDownBlockPos(World world, BlockPos pos) {
+    while (world.getBlockState(pos).getBlock() == Blocks.AIR) {
+      LOGGER.info("Dropping down from {}", pos);
+      pos = pos.add(0, -1, 0);
+    }
+    return pos;
   }
 
   public static void startInvasion() {
