@@ -77,9 +77,11 @@ public class CWFInvasionsManager {
   }
 
   public static void spawnFromConfig(EntityPlayerMP player) {
-    BlockPos spawnPos = findAirBlockNear(player);
     World world = player.world;
     InvadeMobClass mobClass = chosenConfig.pickRandomMobClass();
+    int minDistMob = mobClass.minDist == -1 ? Configuration.common.minInvadeDistance : mobClass.minDist;
+    int maxDistMob = mobClass.maxDist == -1 ? Configuration.common.maxInvadeDistance : mobClass.maxDist;
+    BlockPos spawnPos = findAirBlockNear(player, minDistMob, maxDistMob);
     EntityEntry entry = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(mobClass.ent));
     try {
       Entity realEntity = entry.getEntityClass().getConstructor(World.class).newInstance(world);
@@ -184,10 +186,8 @@ public class CWFInvasionsManager {
     spawnFromConfig(player);
   }
 
-  public static BlockPos findAirBlockNear(EntityPlayer player) {
+  public static BlockPos findAirBlockNear(EntityPlayer player, int minDist, int maxDist) {
     LOGGER.info("Searching space for spawn");
-    int maxDist = Configuration.common.maxInvadeDistance;
-    int minDist = Configuration.common.minInvadeDistance;
     int maxDistSq = maxDist * maxDist;
     int minDistSq = minDist * minDist;
     int randomX = (rand.nextBoolean() ? -1 : 1) * rand.nextInt(maxDist - minDist) + minDist;

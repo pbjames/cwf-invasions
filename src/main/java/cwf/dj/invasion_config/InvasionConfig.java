@@ -11,8 +11,8 @@ public class InvasionConfig {
   public int healthScalingWeight = 2;
   public int damageScalingWeight = 1;
   public InvadeMobClass[] mobClasses = {
-    new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC, 0),
-    new InvadeMobClass("minecraft:skeleton", 2, InvadeMobType.SUPPORT, 0),
+    new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC, 0, -1, -1),
+    new InvadeMobClass("minecraft:skeleton", 2, InvadeMobType.SUPPORT, 0, -1, -1),
   };
 
   public InvadeMobClass pickRandomMobClass() {
