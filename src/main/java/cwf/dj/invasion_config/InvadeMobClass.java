@@ -1,4 +1,4 @@
-package cwf.dj;
+package cwf.dj.invasion_config;
 
 public class InvadeMobClass {
   public final String ent;

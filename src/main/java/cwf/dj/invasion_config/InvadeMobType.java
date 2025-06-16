@@ -1,4 +1,4 @@
-package cwf.dj;
+package cwf.dj.invasion_config;
 
 public enum InvadeMobType {
   // TODO: Leaving this for later

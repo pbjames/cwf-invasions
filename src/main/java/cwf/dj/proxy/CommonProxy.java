@@ -1,8 +1,9 @@
 package cwf.dj.proxy;
 
 import cwf.dj.CWFInvasions;
-import cwf.dj.InvasionsConfiguration;
 import cwf.dj.capabilities.CapabilityStarLevel;
+import cwf.dj.invasion_config.InvasionConfigCollection;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import net.minecraft.block.Block;
@@ -28,7 +29,7 @@ public class CommonProxy {
     modConfigDir = modConfigDir.resolve("invasions");
     if (!modConfigDir.toFile().exists()) modConfigDir.toFile().mkdirs();
     try {
-      InvasionsConfiguration.loadFrom(modConfigDir);
+      InvasionConfigCollection.loadFrom(modConfigDir);
     } catch (IOException e1) {
       e1.printStackTrace();
     }
@@ -40,7 +41,7 @@ public class CommonProxy {
 
   public void onServerStopping(FMLServerStoppingEvent e) {
     try {
-      InvasionsConfiguration.writeTemplate(modConfigDir);
+      InvasionConfigCollection.writeTemplate(modConfigDir);
     } catch (IOException e1) {
       e1.printStackTrace();
     }

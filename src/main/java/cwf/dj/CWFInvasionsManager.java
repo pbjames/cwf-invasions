@@ -1,5 +1,8 @@
 package cwf.dj;
 
+import cwf.dj.invasion_config.InvadeMobClass;
+import cwf.dj.invasion_config.InvasionConfig;
+import cwf.dj.invasion_config.InvasionConfigCollection;
 import cwf.dj.tasks.EntityAIChaseMelee;
 import cwf.dj.tasks.EntityAIOmniSetTarget;
 import java.lang.reflect.InvocationTargetException;
@@ -104,7 +107,7 @@ public class CWFInvasionsManager {
     if (getInvasion()) {
       checkForEnding(chosenConfig);
     } else {
-      for (InvasionConfig config : InvasionsConfiguration.configs) {
+      for (InvasionConfig config : InvasionConfigCollection.configs) {
         if (checkForStarting(config)) {
           chosenConfig = config;
           return;
