@@ -12,17 +12,17 @@ public class InvasionConfig {
   public int damageScalingWeight = 1;
   public InvadeMobClass[] mobClasses = {
     new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC),
-    new InvadeMobClass("minecraft:skeleton", 2, InvadeMobType.SUPPORT)
+    new InvadeMobClass("minecraft:skeleton", 2, InvadeMobType.SUPPORT),
   };
 
   public InvadeMobClass pickRandomMobClass() {
     int totalWeight = 0;
     for (InvadeMobClass mobClass : mobClasses) totalWeight += mobClass.weight;
-    int selected = new Random().nextInt(totalWeight - 1);
+    int selected = new Random().nextInt(totalWeight);
     int runSum = 0;
     for (InvadeMobClass mobClass : mobClasses) {
       runSum += mobClass.weight;
-      if ((selected <= runSum) && (selected >= (runSum - mobClass.weight))) return mobClass;
+      if ((selected < runSum) && (selected >= (runSum - mobClass.weight))) return mobClass;
     }
     return mobClasses[mobClasses.length - 1];
   }

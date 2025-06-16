@@ -172,7 +172,7 @@ public class CWFInvasionsManager {
   public static void invade(EntityPlayerMP player, int playerCount) {
     int maintenanceLevel = Configuration.common.mobMaintainCount;
     removeDeadMobs();
-    if (activeMobs.size() >= maintenanceLevel * playerCount) return;
+    if (activeMobs.size() >= (maintenanceLevel * playerCount)) return;
     spawnFromConfig(player);
   }
 
