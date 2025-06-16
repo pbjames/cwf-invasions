@@ -80,8 +80,8 @@ public class CWFInvasionsManager {
     InvadeMobClass mobClass = chosenConfig.pickRandomMobClass();
     EntityEntry entry = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(mobClass.ent));
     try {
-      EntityCreature zombie =
-          (EntityCreature) entry.getEntityClass().getConstructor(World.class).newInstance(world);
+      Entity realEntity = entry.getEntityClass().getConstructor(World.class).newInstance(world);
+      EntityCreature zombie = (EntityCreature) realEntity;
       zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
       zombie.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(zombie, 1.0D, player));
       zombie.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));

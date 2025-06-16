@@ -27,11 +27,13 @@ repositories {
         name = "MavenCentral"
         url = "https://repo1.maven.org/maven2/"
     }
+    maven { url "https://cursemaven.com" }
 }
 
 dependencies {
 	minecraft "net.minecraftforge:forge:1.12.2-14.23.5.2860"
     implementation 'org.yaml:snakeyaml:1.29'
+    implementation fg.deobf("curse.maven:techguns-244201:2958103")
 }
 
 minecraft {
