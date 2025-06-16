@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import org.yaml.snakeyaml.Yaml;
 
 public class InvasionsConfiguration {
@@ -48,6 +49,18 @@ class InvasionConfig {
     new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC),
     new InvadeMobClass("minecraft:skeleton", 2, InvadeMobType.SUPPORT)
   };
+
+  public InvadeMobClass pickRandomMobClass() {
+    int totalWeight = 0;
+    for (InvadeMobClass mobClass : mobClasses) totalWeight += mobClass.weight;
+    int selected = new Random().nextInt(totalWeight - 1);
+    int runSum = 0;
+    for (InvadeMobClass mobClass : mobClasses) {
+      runSum += mobClass.weight;
+      if ((selected <= runSum) && (selected >= (runSum - mobClass.weight))) return mobClass;
+    }
+    return mobClasses[mobClasses.length - 1];
+  }
 }
 
 enum InvadeStartCondition {
@@ -60,31 +73,4 @@ enum InvadeStartCondition {
 enum InvadeEndCondition {
   MOBCOUNT,
   TIME
-}
-
-class InvadeMobClass {
-  public final String ent;
-  public final int weight;
-  public final InvadeMobType type;
-
-  public InvadeMobClass(String ent, int weight, InvadeMobType type) {
-    this.ent = ent;
-    this.weight = weight;
-    this.type = type;
-  }
-  public InvadeMobClass() {
-    this.ent = "default";
-    this.weight = 1;
-    this.type = InvadeMobType.CQC;
-  }
-}
-
-enum InvadeMobType {
-  // TODO: Leaving this for later
-  CQC(0),
-  GUNNER(1),
-  MINER(2),
-  SUPPORT(3);
-
-  InvadeMobType(int aiTaskKind) {}
 }

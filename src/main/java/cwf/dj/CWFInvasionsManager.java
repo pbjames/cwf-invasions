@@ -1,5 +1,8 @@
 package cwf.dj;
 
+import cwf.dj.tasks.EntityAIChaseMelee;
+import cwf.dj.tasks.EntityAIOmniSetTarget;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -12,7 +15,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
@@ -20,6 +23,7 @@ import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
@@ -29,9 +33,9 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
+import net.minecraftforge.fml.common.registry.EntityEntry;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.apache.logging.log4j.Logger;
-
-import cwf.dj.tasks.EntityAIOmniSetTarget;
 
 @Mod.EventBusSubscriber
 public class CWFInvasionsManager {
@@ -60,12 +64,33 @@ public class CWFInvasionsManager {
     int fastCheckTime = Configuration.common.fastTickTime;
     MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
     List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
-    if (world.getTotalWorldTime() % fastCheckTime == 0) {
-      for (EntityPlayerMP player : players) {
-        if (getInvasion()) invade(player, players.size());
-      }
-    } if (world.getTotalWorldTime() % slowCheckTime == 0) {
+    if (world.getTotalWorldTime() % fastCheckTime == 0)
+      for (EntityPlayerMP player : players) if (getInvasion()) invade(player, players.size());
+    if (world.getTotalWorldTime() % slowCheckTime == 0)
       players.forEach(player -> checkSetInvasion(player));
+  }
+
+  public static void spawnFromConfig(EntityPlayerMP player) {
+    BlockPos spawnPos = findAirBlockNear(player);
+    World world = player.world;
+    InvadeMobClass mobClass = chosenConfig.pickRandomMobClass();
+    EntityEntry entry = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(mobClass.ent));
+    try {
+      EntityCreature zombie =
+          (EntityCreature) entry.getEntityClass().getConstructor(World.class).newInstance(world);
+      zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
+      zombie.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(zombie, 1.0D, player));
+      zombie.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
+      zombie.setPosition(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
+      world.spawnEntity(zombie);
+      activeMobs.add(zombie);
+    } catch (InstantiationException
+        | IllegalAccessException
+        | IllegalArgumentException
+        | InvocationTargetException
+        | NoSuchMethodException
+        | SecurityException e) {
+      e.printStackTrace();
     }
   }
 
@@ -142,18 +167,10 @@ public class CWFInvasionsManager {
   }
 
   public static void invade(EntityPlayerMP player, int playerCount) {
-    BlockPos spawnPos = findAirBlockNear(player);
-    World world = player.world;
     int maintenanceLevel = Configuration.common.mobMaintainCount;
     removeDeadMobs();
     if (activeMobs.size() >= maintenanceLevel * playerCount) return;
-    EntityZombie zombie = new EntityZombie(world);
-    zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
-    // zombie.tasks.addTask(2, new EntityAIOmniAttackMelee(zombie, 4.0D));
-    zombie.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
-    zombie.setPosition(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ());
-    world.spawnEntity(zombie);
-    activeMobs.add(zombie);
+    spawnFromConfig(player);
   }
 
   public static BlockPos findAirBlockNear(EntityPlayer player) {
