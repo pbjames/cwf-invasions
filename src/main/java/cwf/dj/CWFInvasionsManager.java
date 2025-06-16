@@ -69,8 +69,9 @@ public class CWFInvasionsManager {
     List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
     if (world.getTotalWorldTime() % fastCheckTime == 0)
       for (EntityPlayerMP player : players) if (getInvasion()) invade(player, players.size());
-    if (world.getTotalWorldTime() % slowCheckTime == 0)
+    if (world.getTotalWorldTime() % slowCheckTime == 0) {
       players.forEach(player -> checkSetInvasion(player));
+    }
   }
 
   public static void spawnFromConfig(EntityPlayerMP player) {
@@ -97,9 +98,12 @@ public class CWFInvasionsManager {
     }
   }
 
-  public static void removeDeadMobs() {
+  public static void removeUnaccountedMobs() {
     int oldCount = activeMobs.size();
-    activeMobs = activeMobs.stream().filter(mob -> !mob.isDead).collect(Collectors.toList());
+    activeMobs =
+        activeMobs.stream()
+            .filter(mob -> !mob.isDead || !mob.isAddedToWorld())
+            .collect(Collectors.toList());
     slainSinceStart += oldCount - activeMobs.size();
   }
 
@@ -171,7 +175,7 @@ public class CWFInvasionsManager {
 
   public static void invade(EntityPlayerMP player, int playerCount) {
     int maintenanceLevel = Configuration.common.mobMaintainCount;
-    removeDeadMobs();
+    removeUnaccountedMobs();
     if (activeMobs.size() >= (maintenanceLevel * playerCount)) return;
     spawnFromConfig(player);
   }
