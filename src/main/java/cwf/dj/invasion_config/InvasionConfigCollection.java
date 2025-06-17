@@ -7,12 +7,12 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
 public class InvasionConfigCollection {
-  public static List<InvasionConfig> configs = new ArrayList<>();
+  public static Map<InvasionConfig, String> configs = new HashMap<>();
 
   public static void loadFrom(Path configDirectory) throws IOException {
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(configDirectory)) {
@@ -21,7 +21,7 @@ public class InvasionConfigCollection {
         FileInputStream iStream = new FileInputStream(entry.toFile());
         Yaml yaml = new Yaml();
         InvasionConfig config = yaml.loadAs(iStream, InvasionConfig.class);
-        configs.add(config);
+        configs.put(config, entry.getFileName().toString());
         iStream.close();
       }
     }
@@ -35,4 +35,3 @@ public class InvasionConfigCollection {
     }
   }
 }
-
