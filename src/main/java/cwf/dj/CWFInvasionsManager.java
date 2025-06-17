@@ -39,7 +39,8 @@ public class CWFInvasionsManager {
   public static List<Entity> activeMobs = new ArrayList<>();
   public static final Random RANDOM = new Random();
   public static final Logger LOGGER = CWFInvasions.logger;
-  public static final MinecraftServer SERVER =FMLCommonHandler.instance().getMinecraftServerInstance(); 
+  public static final MinecraftServer SERVER =
+      FMLCommonHandler.instance().getMinecraftServerInstance();
   public static final TextComponentString INVASION_STARTED_MSG =
       new TextComponentString("§l§cINVASION STARTED§r");
   public static final TextComponentString INVASION_ENDED_MSG =
@@ -161,13 +162,13 @@ public class CWFInvasionsManager {
         }
         break;
       case NIGHT:
-        if (!homeWorld.isDaytime()) {
+        if (homeWorld.getWorldTime() % 13000 == 0) {
           startInvasion();
           return true;
         }
         break;
       case DAY:
-        if (homeWorld.isDaytime()) {
+        if (homeWorld.getWorldTime() == 0) {
           startInvasion();
           return true;
         }
