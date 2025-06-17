@@ -108,12 +108,14 @@ public class CWFInvasionsManager {
 
   public static void spawnFromConfig(EntityPlayerMP player) {
     InvadeMobClass mobClass = getChosenConfig().pickRandomMobClass();
+    double healthScale = getChosenConfig().getHealthFactor();
+    double damageScale = getChosenConfig().getDamageFactor();
     int minDistMob =
         mobClass.minDist == -1 ? Configuration.common.minInvadeDistance : mobClass.minDist;
     int maxDistMob =
         mobClass.maxDist == -1 ? Configuration.common.maxInvadeDistance : mobClass.maxDist;
     BlockPos spawnPos = findAirBlockNear(player, minDistMob, maxDistMob);
-    Entity spawnedEntity = mobClass.spawn(player, spawnPos);
+    Entity spawnedEntity = mobClass.spawn(player, spawnPos, healthScale, damageScale);
     activeMobs.add(spawnedEntity);
   }
 

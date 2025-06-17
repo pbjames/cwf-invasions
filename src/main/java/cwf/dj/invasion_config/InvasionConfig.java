@@ -33,10 +33,10 @@ public class InvasionConfig {
   }
 
   public double getHealthFactor() {
-    return (healthScalingWeight / totalAttributeWeights()) * totalMobScalingFactor;
+    return 1 + ((healthScalingWeight / totalAttributeWeights()) * totalMobScalingFactor);
   }
 
   public double getDamageFactor() {
-    return (healthScalingWeight / totalAttributeWeights()) * totalMobScalingFactor;
+    return 1 + ((damageScalingWeight / totalAttributeWeights()) * totalMobScalingFactor);
   }
 }
