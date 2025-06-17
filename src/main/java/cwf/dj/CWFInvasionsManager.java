@@ -3,9 +3,6 @@ package cwf.dj;
 import cwf.dj.invasion_config.InvadeMobClass;
 import cwf.dj.invasion_config.InvasionConfig;
 import cwf.dj.invasion_config.InvasionConfigCollection;
-import cwf.dj.tasks.EntityAIChaseMelee;
-import cwf.dj.tasks.EntityAIOmniSetTarget;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,15 +18,10 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
@@ -39,8 +31,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
-import net.minecraftforge.fml.common.registry.EntityEntry;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.apache.logging.log4j.Logger;
 
 @Mod.EventBusSubscriber
@@ -49,6 +39,7 @@ public class CWFInvasionsManager {
   public static List<Entity> activeMobs = new ArrayList<>();
   public static final Random RANDOM = new Random();
   public static final Logger LOGGER = CWFInvasions.logger;
+  public static final MinecraftServer SERVER =FMLCommonHandler.instance().getMinecraftServerInstance(); 
   public static final TextComponentString INVASION_STARTED_MSG =
       new TextComponentString("§l§cINVASION STARTED§r");
   public static final TextComponentString INVASION_ENDED_MSG =
@@ -64,11 +55,7 @@ public class CWFInvasionsManager {
     if (data == null) return;
     int slowCheckTime = Configuration.common.slowTickTime;
     int fastCheckTime = Configuration.common.fastTickTime;
-    MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-    List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
-    LOGGER.info("invasion state: {}", getInvasion());
-    LOGGER.info("totalWorldTime={},fastCheckTime={}", homeWorld.getTotalWorldTime(), fastCheckTime);
-    logConfig();
+    List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
     if (homeWorld.getTotalWorldTime() % fastCheckTime == 0)
       for (EntityPlayerMP player : players) if (getInvasion()) invade(player, players.size());
     if (homeWorld.getTotalWorldTime() % slowCheckTime == 0) {
@@ -87,7 +74,6 @@ public class CWFInvasionsManager {
 
   public static void createAndStoreData(World worldIn) {
     // INFO: Assume if we have no world data, there's no invasion history
-    LOGGER.info(InvasionConfigCollection.configs);
     ManagerDataStore data = new ManagerDataStore();
     worldIn.getMapStorage().setData(ManagerDataStore.NAME, data);
     data.markDirty();
@@ -121,34 +107,14 @@ public class CWFInvasionsManager {
   }
 
   public static void spawnFromConfig(EntityPlayerMP player) {
-    LOGGER.info("Spawn call, {}", getChosenConfig());
     InvadeMobClass mobClass = getChosenConfig().pickRandomMobClass();
     int minDistMob =
         mobClass.minDist == -1 ? Configuration.common.minInvadeDistance : mobClass.minDist;
     int maxDistMob =
         mobClass.maxDist == -1 ? Configuration.common.maxInvadeDistance : mobClass.maxDist;
     BlockPos spawnPos = findAirBlockNear(player, minDistMob, maxDistMob);
-    EntityEntry entry = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(mobClass.ent));
-    try {
-      Entity realEntity =
-          entry.getEntityClass().getConstructor(World.class).newInstance(player.world);
-      if (realEntity instanceof EntityCreature) {
-        EntityCreature zombie = (EntityCreature) realEntity;
-        zombie.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(zombie, player));
-        zombie.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(zombie, 1.0D, player));
-        zombie.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
-      }
-      realEntity.setPosition(spawnPos.getX(), spawnPos.getY() + mobClass.yOffset, spawnPos.getZ());
-      player.world.spawnEntity(realEntity);
-      activeMobs.add(realEntity);
-    } catch (InstantiationException
-        | IllegalAccessException
-        | IllegalArgumentException
-        | InvocationTargetException
-        | NoSuchMethodException
-        | SecurityException e) {
-      e.printStackTrace();
-    }
+    Entity spawnedEntity = mobClass.spawn(player, spawnPos);
+    activeMobs.add(spawnedEntity);
   }
 
   public static void removeUnaccountedMobs() {
@@ -179,7 +145,6 @@ public class CWFInvasionsManager {
   }
 
   private static boolean checkForStarting(InvasionConfig config) {
-    LOGGER.info("Want to start invasion, daytime: {}", homeWorld.isDaytime());
     switch (config.startCondition) {
       case FORTNIGHT:
         if (homeWorld.getTotalWorldTime() % (14 * 24000) == 0) {
@@ -210,8 +175,7 @@ public class CWFInvasionsManager {
   }
 
   private static boolean checkForEnding(InvasionConfig config) {
-    MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-    List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+    List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
     switch (config.endingCondition) {
       case MOBCOUNT:
         if (data.slainSinceStart * players.size() >= config.mobCountToEnd) {
@@ -238,7 +202,6 @@ public class CWFInvasionsManager {
   }
 
   public static BlockPos findAirBlockNear(EntityPlayer player, int minDist, int maxDist) {
-    LOGGER.info("Searching space for spawn");
     int maxDistSq = maxDist * maxDist;
     int minDistSq = minDist * minDist;
     int randomX = (RANDOM.nextBoolean() ? -1 : 1) * RANDOM.nextInt(maxDist - minDist) + minDist;
@@ -264,7 +227,7 @@ public class CWFInvasionsManager {
         }
       }
     }
-    LOGGER.info("Position not satisfied, being aggressive");
+    LOGGER.info("Position not satisfied for spawning, being aggressive");
     return player.getPosition();
   }
 
@@ -288,8 +251,7 @@ public class CWFInvasionsManager {
 
   public static void startInvasion() {
     LOGGER.info("Invasion starting");
-    MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-    List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+    List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
     players.forEach(player -> player.sendMessage(INVASION_STARTED_MSG));
     data.invasionHappeningNow = true;
     data.slainSinceStart = 0;
@@ -299,8 +261,7 @@ public class CWFInvasionsManager {
 
   public static void endInvasion() {
     LOGGER.info("Invasion ending");
-    MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-    List<EntityPlayerMP> players = server.getPlayerList().getPlayers();
+    List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
     players.forEach(player -> player.sendMessage(INVASION_ENDED_MSG));
     data.invasionHappeningNow = false;
     data.markDirty();

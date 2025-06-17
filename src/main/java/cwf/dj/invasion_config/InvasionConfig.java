@@ -10,6 +10,7 @@ public class InvasionConfig {
   public int maintainedPopulation = 10;
   public int healthScalingWeight = 2;
   public int damageScalingWeight = 1;
+  public int totalMobScalingFactor = 2;
   public InvadeMobClass[] mobClasses = {
     new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC, 0, -1, -1),
     new InvadeMobClass("minecraft:skeleton", 2, InvadeMobType.SUPPORT, 0, -1, -1),
@@ -25,5 +26,17 @@ public class InvasionConfig {
       if ((selected < runSum) && (selected >= (runSum - mobClass.weight))) return mobClass;
     }
     return mobClasses[mobClasses.length - 1];
+  }
+
+  public int totalAttributeWeights() {
+    return healthScalingWeight + damageScalingWeight;
+  }
+
+  public double getHealthFactor() {
+    return (healthScalingWeight / totalAttributeWeights()) * totalMobScalingFactor;
+  }
+
+  public double getDamageFactor() {
+    return (healthScalingWeight / totalAttributeWeights()) * totalMobScalingFactor;
   }
 }

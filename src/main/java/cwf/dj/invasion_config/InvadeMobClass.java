@@ -1,5 +1,23 @@
 package cwf.dj.invasion_config;
 
+import java.lang.reflect.InvocationTargetException;
+
+import javax.annotation.Nullable;
+
+import cwf.dj.tasks.EntityAIChaseMelee;
+import cwf.dj.tasks.EntityAIOmniSetTarget;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Items;
+import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.EntityEntry;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
+
 public class InvadeMobClass {
   public final String ent;
   public final InvadeMobType type;
@@ -25,5 +43,35 @@ public class InvadeMobClass {
     this.yOffset = 0;
     this.minDist = -1;
     this.maxDist = -1;
+  }
+
+  @Nullable
+  public Entity spawn(EntityPlayerMP player, BlockPos spawnPos) {
+    EntityEntry entry = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(ent));
+    try {
+      Entity realEntity =
+          entry.getEntityClass().getConstructor(World.class).newInstance(player.world);
+      if (realEntity instanceof EntityCreature) {
+        prepareEntityCreature((EntityCreature) realEntity, player, this);
+      }
+      realEntity.setPosition(spawnPos.getX(), spawnPos.getY() + yOffset, spawnPos.getZ());
+      player.world.spawnEntity(realEntity);
+      return realEntity;
+    } catch (InstantiationException
+        | IllegalAccessException
+        | IllegalArgumentException
+        | InvocationTargetException
+        | NoSuchMethodException
+        | SecurityException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  public static void prepareEntityCreature(
+      EntityCreature creature, EntityPlayerMP player, InvadeMobClass mobClass) {
+    creature.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(creature, player));
+    creature.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
+    creature.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
   }
 }
