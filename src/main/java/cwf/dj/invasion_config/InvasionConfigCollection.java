@@ -12,7 +12,7 @@ import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
 public class InvasionConfigCollection {
-  public static Map<InvasionConfig, String> configs = new HashMap<>();
+  public static Map<String, InvasionConfig> configs = new HashMap<>();
 
   public static void loadFrom(Path configDirectory) throws IOException {
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(configDirectory)) {
@@ -21,7 +21,7 @@ public class InvasionConfigCollection {
         FileInputStream iStream = new FileInputStream(entry.toFile());
         Yaml yaml = new Yaml();
         InvasionConfig config = yaml.loadAs(iStream, InvasionConfig.class);
-        configs.put(config, entry.getFileName().toString());
+        configs.put(entry.getFileName().toString(), config);
         iStream.close();
       }
     }

@@ -47,30 +47,21 @@ public class CWFInvasionsManager {
       new TextComponentString("§l§6INVASION ENDED§r");
   // INFO: Valid on the assumption this code runs on server ticks, and usually when
   // there's a minecraft server there's also a non-null world to go along with it.
-  public static World homeWorld = DimensionManager.getWorld(0);
+  public static World world = DimensionManager.getWorld(0);
 
   @SubscribeEvent
   public static void onTickServer(ServerTickEvent event) {
     if (event.phase != Phase.START) return;
-    if (homeWorld == null) return;
+    if (world == null) return;
     if (data == null) return;
     int slowCheckTime = Configuration.common.slowTickTime;
     int fastCheckTime = Configuration.common.fastTickTime;
     List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
-    if (homeWorld.getTotalWorldTime() % fastCheckTime == 0)
+    if (world.getTotalWorldTime() % fastCheckTime == 0)
       for (EntityPlayerMP player : players) if (getInvasion()) invade(player, players.size());
-    if (homeWorld.getTotalWorldTime() % slowCheckTime == 0) {
+    if (world.getTotalWorldTime() % slowCheckTime == 0) {
       players.forEach(player -> checkSetInvasion(player));
     }
-  }
-
-  public static void refreshWorld(World worldIn) {
-    homeWorld = worldIn;
-  }
-
-  public static InvasionConfig getChosenConfig() {
-    // TODO: reverse this later
-    return reverseMap(InvasionConfigCollection.configs).get(data.configName);
   }
 
   public static void createAndStoreData(World worldIn) {
@@ -79,72 +70,23 @@ public class CWFInvasionsManager {
     worldIn.getMapStorage().setData(ManagerDataStore.NAME, data);
     data.markDirty();
     setData(data);
-  }
-
-  public static void setData(ManagerDataStore dataIn) {
-    data = dataIn;
+    setWorld(worldIn);
   }
 
   public static void loadFromWorld(World worldIn) {
     ManagerDataStore dataFrom = ManagerDataStore.retrieveData(worldIn);
     setData(dataFrom);
+    setWorld(worldIn);
   }
 
   public static void logConfig() {
     LOGGER.info(
-        "Log state:"
-            + " CWFINvasionsManager[invasion={},timeAtStart={},slainSinceStart={},configName={}]",
+        "logConfig():"
+            + " CWFInvasionsManager[invasion={},timeAtStart={},slainSinceStart={},configName={}]",
         data.invasionHappeningNow,
         data.timeAtStart,
         data.slainSinceStart,
         data.configName);
-  }
-
-  public static <K, V> Map<V, K> reverseMap(Map<K, V> original) {
-    Map<V, K> reversed = new HashMap<>();
-    for (Map.Entry<K, V> entry : original.entrySet())
-      reversed.put(entry.getValue(), entry.getKey());
-    return reversed;
-  }
-
-  public static void spawnFromConfig(EntityPlayerMP player) {
-    InvadeMobClass mobClass = getChosenConfig().pickRandomMobClass();
-    double healthScale = getChosenConfig().getHealthFactor();
-    double damageScale = getChosenConfig().getDamageFactor();
-    int minDistMob =
-        mobClass.minDist == -1 ? Configuration.common.minInvadeDistance : mobClass.minDist;
-    int maxDistMob =
-        mobClass.maxDist == -1 ? Configuration.common.maxInvadeDistance : mobClass.maxDist;
-    BlockPos spawnPos = findAirBlockNear(player, minDistMob, maxDistMob);
-    Entity spawnedEntity = mobClass.spawn(player, spawnPos, healthScale, damageScale);
-    activeMobs.add(spawnedEntity);
-  }
-
-  public static void removeUnaccountedMobs() {
-    int oldCount = activeMobs.size();
-    activeMobs =
-        activeMobs.stream()
-            .filter(mob -> !mob.isDead || mob.isAddedToWorld())
-            .collect(Collectors.toList());
-    data.slainSinceStart += oldCount - activeMobs.size();
-    data.markDirty();
-  }
-
-  public static void checkSetInvasion(@Nonnull EntityPlayerMP player) {
-    if (getInvasion()) {
-      checkForEnding(getChosenConfig());
-    } else {
-      // INFO: For multiple invasions we pick the first match for start conditions
-      // and stick with that for the end condition
-      // Perhaps in the future, we could manager multiple invasions simultaneously
-      for (InvasionConfig config : InvasionConfigCollection.configs.keySet()) {
-        if (checkForStarting(config)) {
-          data.configName = InvasionConfigCollection.configs.get(config);
-          data.markDirty();
-          return;
-        }
-      }
-    }
   }
 
   public static void invade(EntityPlayerMP player, int playerCount) {
@@ -154,7 +96,33 @@ public class CWFInvasionsManager {
     spawnFromConfig(player);
   }
 
-  public static BlockPos findAirBlockNear(EntityPlayer player, int minDist, int maxDist) {
+  public static void startInvasion() {
+    LOGGER.info("Invasion starting");
+    List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
+    players.forEach(player -> player.sendMessage(INVASION_STARTED_MSG));
+    data.invasionHappeningNow = true;
+    data.slainSinceStart = 0;
+    data.timeAtStart = world.getTotalWorldTime();
+    data.markDirty();
+  }
+
+  public static void endInvasion() {
+    LOGGER.info("Invasion ending");
+    List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
+    players.forEach(player -> player.sendMessage(INVASION_ENDED_MSG));
+    data.invasionHappeningNow = false;
+    data.markDirty();
+  }
+
+  public static boolean getInvasion() {
+    return data.invasionHappeningNow;
+  }
+
+  private static InvasionConfig getChosenConfig() {
+    return InvasionConfigCollection.configs.get(data.configName);
+  }
+
+  private static BlockPos findAirBlockNear(EntityPlayer player, int minDist, int maxDist) {
     int maxDistSq = maxDist * maxDist;
     int minDistSq = minDist * minDist;
     int randomX = (RANDOM.nextBoolean() ? -1 : 1) * RANDOM.nextInt(maxDist - minDist) + minDist;
@@ -184,51 +152,84 @@ public class CWFInvasionsManager {
     return player.getPosition();
   }
 
-  public static void startInvasion() {
-    LOGGER.info("Invasion starting");
-    List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
-    players.forEach(player -> player.sendMessage(INVASION_STARTED_MSG));
-    data.invasionHappeningNow = true;
-    data.slainSinceStart = 0;
-    data.timeAtStart = homeWorld.getTotalWorldTime();
+  private static void spawnFromConfig(EntityPlayerMP player) {
+    InvadeMobClass mobClass = getChosenConfig().pickRandomMobClass();
+    double healthScale = getChosenConfig().getHealthFactor();
+    double damageScale = getChosenConfig().getDamageFactor();
+    int minDistMob =
+        mobClass.minDist == -1 ? Configuration.common.minInvadeDistance : mobClass.minDist;
+    int maxDistMob =
+        mobClass.maxDist == -1 ? Configuration.common.maxInvadeDistance : mobClass.maxDist;
+    BlockPos spawnPos = findAirBlockNear(player, minDistMob, maxDistMob);
+    Entity spawnedEntity = mobClass.spawn(player, spawnPos, healthScale, damageScale);
+    activeMobs.add(spawnedEntity);
+  }
+
+  private static void removeUnaccountedMobs() {
+    int oldCount = activeMobs.size();
+    activeMobs =
+        activeMobs.stream()
+            .filter(mob -> !mob.isDead || mob.isAddedToWorld())
+            .collect(Collectors.toList());
+    data.slainSinceStart += oldCount - activeMobs.size();
     data.markDirty();
   }
 
-  public static void endInvasion() {
-    LOGGER.info("Invasion ending");
-    List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
-    players.forEach(player -> player.sendMessage(INVASION_ENDED_MSG));
-    data.invasionHappeningNow = false;
-    data.markDirty();
+  private static void checkSetInvasion(@Nonnull EntityPlayerMP player) {
+    if (getInvasion()) {
+      checkForEnding(getChosenConfig());
+    } else {
+      // INFO: For multiple invasions we pick the first match for start conditions
+      // and stick with that for the end condition
+      // Perhaps in the future, we could manager multiple invasions simultaneously
+      for (InvasionConfig config : InvasionConfigCollection.configs.values()) {
+        if (checkForStarting(config)) {
+          data.configName = reverseMap(InvasionConfigCollection.configs).get(config);
+          data.markDirty();
+          return;
+        }
+      }
+    }
   }
 
-  public static boolean getInvasion() {
-    return data.invasionHappeningNow;
+  private static void setWorld(World worldIn) {
+    world = worldIn;
+  }
+
+  private static void setData(ManagerDataStore dataIn) {
+    data = dataIn;
+  }
+
+  private static <K, V> Map<V, K> reverseMap(Map<K, V> original) {
+    Map<V, K> reversed = new HashMap<>();
+    for (Map.Entry<K, V> entry : original.entrySet())
+      reversed.put(entry.getValue(), entry.getKey());
+    return reversed;
   }
 
   private static boolean checkForStarting(InvasionConfig config) {
     switch (config.startCondition) {
       case FORTNIGHT:
-        if (homeWorld.getTotalWorldTime() % (14 * 24000) == 0) {
+        if (world.getTotalWorldTime() % (14 * 24000) == 0) {
           startInvasion();
           return true;
         }
         break;
       case FULL_MOON:
-        if (homeWorld.getMoonPhase() == 0) {
+        if (world.getMoonPhase() == 0) {
           startInvasion();
           return true;
         }
         break;
       case NIGHT:
-        long time = homeWorld.getWorldTime();
+        long time = world.getWorldTime();
         if (23000 > time && time > 13000) {
           startInvasion();
           return true;
         }
         break;
       case DAY:
-        if (homeWorld.getWorldTime() == 0) {
+        if (world.getWorldTime() == 0) {
           startInvasion();
           return true;
         }
@@ -247,7 +248,7 @@ public class CWFInvasionsManager {
         }
         break;
       case TIME:
-        long timeDelta = homeWorld.getTotalWorldTime() - data.timeAtStart;
+        long timeDelta = world.getTotalWorldTime() - data.timeAtStart;
         if (timeDelta >= config.timeToEndTicks) {
           endInvasion();
           return true;
@@ -270,8 +271,8 @@ public class CWFInvasionsManager {
     return positions;
   }
 
-  private static BlockPos castDownBlockPos(World world, BlockPos pos) {
-    while (world.getBlockState(pos).getBlock() == Blocks.AIR) pos = pos.add(0, -1, 0);
+  private static BlockPos castDownBlockPos(World worldIn, BlockPos pos) {
+    while (worldIn.getBlockState(pos).getBlock() == Blocks.AIR) pos = pos.add(0, -1, 0);
     return pos;
   }
 }

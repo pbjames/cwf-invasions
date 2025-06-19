@@ -55,7 +55,6 @@ public class ManagerDataStore extends WorldSavedData {
         CWFInvasionsManager.createAndStoreData(world);
       }
       CWFInvasionsManager.logConfig();
-      CWFInvasionsManager.refreshWorld(world);
     }
   }
 
