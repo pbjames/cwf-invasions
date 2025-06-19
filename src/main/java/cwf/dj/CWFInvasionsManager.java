@@ -89,13 +89,6 @@ public class CWFInvasionsManager {
         data.configName);
   }
 
-  public static void invade(EntityPlayerMP player, int playerCount) {
-    int maintenanceLevel = Configuration.common.mobMaintainCount;
-    removeUnaccountedMobs();
-    if (activeMobs.size() >= (maintenanceLevel * playerCount)) return;
-    spawnFromConfig(player);
-  }
-
   public static void startInvasion(InvasionConfig config) {
     LOGGER.info("Invasion starting");
     List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
@@ -117,6 +110,13 @@ public class CWFInvasionsManager {
 
   public static boolean getInvasion() {
     return data.invasionHappeningNow;
+  }
+
+  private static void invade(EntityPlayerMP player, int playerCount) {
+    int maintenanceLevel = Configuration.common.mobMaintainCount;
+    removeUnaccountedMobs();
+    if (activeMobs.size() >= (maintenanceLevel * playerCount)) return;
+    spawnFromConfig(player);
   }
 
   private static InvasionConfig getChosenConfig() {

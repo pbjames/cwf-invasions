@@ -27,9 +27,6 @@ public class EntityAIChaseMelee<T extends EntityLivingBase> extends EntityAIBase
   /** The PathEntity of our entity. */
   Path path;
 
-  private double targetX;
-  private double targetY;
-  private double targetZ;
   protected final int attackInterval = 20;
   private T targetEntity;
 
@@ -83,7 +80,7 @@ public class EntityAIChaseMelee<T extends EntityLivingBase> extends EntityAIBase
             || ((EntityPlayer) targetEntity).isCreative())) {
       this.attacker.setAttackTarget((EntityLivingBase) null);
     }
-    //this.attacker.getNavigator().clearPath();
+    // this.attacker.getNavigator().clearPath();
   }
 
   /** Keep ticking a continuous task that has already been started */
@@ -92,10 +89,6 @@ public class EntityAIChaseMelee<T extends EntityLivingBase> extends EntityAIBase
     double d0 =
         this.attacker.getDistanceSq(
             targetEntity.posX, targetEntity.getEntityBoundingBox().minY, targetEntity.posZ);
-
-    this.targetX = targetEntity.posX;
-    this.targetY = targetEntity.getEntityBoundingBox().minY;
-    this.targetZ = targetEntity.posZ;
 
     this.attacker.getNavigator().tryMoveToEntityLiving(targetEntity, this.speedTowardsTarget);
 

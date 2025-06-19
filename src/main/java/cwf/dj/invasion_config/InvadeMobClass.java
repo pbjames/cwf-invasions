@@ -6,8 +6,11 @@ import java.lang.reflect.InvocationTargetException;
 import javax.annotation.Nullable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
@@ -86,7 +89,14 @@ public class InvadeMobClass {
   private static void prepareEntityCreature(
       EntityCreature creature, EntityPlayerMP player, InvadeMobClass mobClass) {
     creature.targetTasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(creature, player));
-    creature.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
+    // removeAiFromEntity(creature, EntityAIZombieAttack.cass);
+    // .;pe.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
     creature.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
+  }
+
+  private static void removeAiFromEntity(EntityLiving entity, Class<? extends EntityAIBase> clazz) {
+    for (EntityAITaskEntry entry : entity.tasks.taskEntries) {
+      if (clazz.isAssignableFrom(entry.action.getClass())) entity.tasks.removeTask(entry.action);
+    }
   }
 }
