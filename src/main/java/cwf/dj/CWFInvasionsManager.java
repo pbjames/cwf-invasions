@@ -147,56 +147,6 @@ public class CWFInvasionsManager {
     }
   }
 
-  private static boolean checkForStarting(InvasionConfig config) {
-    switch (config.startCondition) {
-      case FORTNIGHT:
-        if (homeWorld.getTotalWorldTime() % (14 * 24000) == 0) {
-          startInvasion();
-          return true;
-        }
-        break;
-      case FULL_MOON:
-        if (homeWorld.getMoonPhase() == 0) {
-          startInvasion();
-          return true;
-        }
-        break;
-      case NIGHT:
-        if (homeWorld.getWorldTime() % 13000 == 0) {
-          startInvasion();
-          return true;
-        }
-        break;
-      case DAY:
-        if (homeWorld.getWorldTime() == 0) {
-          startInvasion();
-          return true;
-        }
-        break;
-    }
-    return false;
-  }
-
-  private static boolean checkForEnding(InvasionConfig config) {
-    List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
-    switch (config.endingCondition) {
-      case MOBCOUNT:
-        if (data.slainSinceStart * players.size() >= config.mobCountToEnd) {
-          endInvasion();
-          return true;
-        }
-        break;
-      case TIME:
-        long timeDelta = homeWorld.getTotalWorldTime() - data.timeAtStart;
-        if (timeDelta >= config.timeToEndTicks) {
-          endInvasion();
-          return true;
-        }
-        break;
-    }
-    return false;
-  }
-
   public static void invade(EntityPlayerMP player, int playerCount) {
     int maintenanceLevel = Configuration.common.mobMaintainCount;
     removeUnaccountedMobs();
@@ -234,24 +184,6 @@ public class CWFInvasionsManager {
     return player.getPosition();
   }
 
-  private static List<BlockPos> getNeighborOffsets() {
-    List<BlockPos> positions =
-        Arrays.asList(
-            new BlockPos(0, -1, 0),
-            new BlockPos(1, 0, 0),
-            new BlockPos(-1, 0, 0),
-            new BlockPos(0, 0, 1),
-            new BlockPos(0, 0, -1),
-            new BlockPos(0, 1, 0));
-    Collections.shuffle(positions);
-    return positions;
-  }
-
-  private static BlockPos castDownBlockPos(World world, BlockPos pos) {
-    while (world.getBlockState(pos).getBlock() == Blocks.AIR) pos = pos.add(0, -1, 0);
-    return pos;
-  }
-
   public static void startInvasion() {
     LOGGER.info("Invasion starting");
     List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
@@ -272,5 +204,74 @@ public class CWFInvasionsManager {
 
   public static boolean getInvasion() {
     return data.invasionHappeningNow;
+  }
+
+  private static boolean checkForStarting(InvasionConfig config) {
+    switch (config.startCondition) {
+      case FORTNIGHT:
+        if (homeWorld.getTotalWorldTime() % (14 * 24000) == 0) {
+          startInvasion();
+          return true;
+        }
+        break;
+      case FULL_MOON:
+        if (homeWorld.getMoonPhase() == 0) {
+          startInvasion();
+          return true;
+        }
+        break;
+      case NIGHT:
+        long time = homeWorld.getWorldTime();
+        if (23000 > time && time > 13000) {
+          startInvasion();
+          return true;
+        }
+        break;
+      case DAY:
+        if (homeWorld.getWorldTime() == 0) {
+          startInvasion();
+          return true;
+        }
+        break;
+    }
+    return false;
+  }
+
+  private static boolean checkForEnding(InvasionConfig config) {
+    List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
+    switch (config.endingCondition) {
+      case MOBCOUNT:
+        if (data.slainSinceStart * players.size() >= config.mobCountToEnd) {
+          endInvasion();
+          return true;
+        }
+        break;
+      case TIME:
+        long timeDelta = homeWorld.getTotalWorldTime() - data.timeAtStart;
+        if (timeDelta >= config.timeToEndTicks) {
+          endInvasion();
+          return true;
+        }
+        break;
+    }
+    return false;
+  }
+
+  private static List<BlockPos> getNeighborOffsets() {
+    List<BlockPos> positions =
+        Arrays.asList(
+            new BlockPos(0, -1, 0),
+            new BlockPos(1, 0, 0),
+            new BlockPos(-1, 0, 0),
+            new BlockPos(0, 0, 1),
+            new BlockPos(0, 0, -1),
+            new BlockPos(0, 1, 0));
+    Collections.shuffle(positions);
+    return positions;
+  }
+
+  private static BlockPos castDownBlockPos(World world, BlockPos pos) {
+    while (world.getBlockState(pos).getBlock() == Blocks.AIR) pos = pos.add(0, -1, 0);
+    return pos;
   }
 }
