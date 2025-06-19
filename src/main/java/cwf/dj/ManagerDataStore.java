@@ -12,11 +12,39 @@ import org.apache.logging.log4j.Logger;
 @Mod.EventBusSubscriber
 public class ManagerDataStore extends WorldSavedData {
   public static final String NAME = "invasion_worldstate";
+  public static final Logger LOGGER = CWFInvasions.logger;
+
+  @SubscribeEvent
+  public static void onWorldLoad(WorldEvent.Load event) {
+    World world = event.getWorld();
+    if (!world.isRemote && world.provider.getDimension() == 0) {
+      if (ManagerDataStore.isStored(world)) {
+        LOGGER.info("Found save data‼");
+        CWFInvasionsManager.loadFromWorld(world);
+      } else {
+        LOGGER.info("No save data, making it‼");
+        CWFInvasionsManager.createAndStoreData(world);
+      }
+      CWFInvasionsManager.logConfig();
+    }
+  }
+
+  public static ManagerDataStore retrieveData(World worldIn) {
+    MapStorage storage = worldIn.getMapStorage();
+    ManagerDataStore data = (ManagerDataStore) storage.getOrLoadData(ManagerDataStore.class, NAME);
+    return data;
+  }
+
+  private static boolean isStored(World worldIn) {
+    MapStorage storage = worldIn.getMapStorage();
+    return storage.getOrLoadData(ManagerDataStore.class, NAME) != null;
+  }
+  // TODO: Add working invasion cooldowns
+
   public boolean invasionHappeningNow;
   public long timeAtStart;
   public int slainSinceStart;
   public String configName;
-  public static final Logger LOGGER = CWFInvasions.logger;
 
   public ManagerDataStore(
       boolean invasionHappeningNow, long timeAtStart, int slainSinceStart, String configName) {
@@ -43,21 +71,6 @@ public class ManagerDataStore extends WorldSavedData {
     this.configName = "template";
   }
 
-  @SubscribeEvent
-  public static void onWorldLoad(WorldEvent.Load event) {
-    World world = event.getWorld();
-    if (!world.isRemote && world.provider.getDimension() == 0) {
-      if (ManagerDataStore.isStored(world)) {
-        LOGGER.info("Found save data‼");
-        CWFInvasionsManager.loadFromWorld(world);
-      } else {
-        LOGGER.info("No save data, making it‼");
-        CWFInvasionsManager.createAndStoreData(world);
-      }
-      CWFInvasionsManager.logConfig();
-    }
-  }
-
   @Override
   public void readFromNBT(NBTTagCompound nbt) {
     this.invasionHappeningNow = nbt.getBoolean("invasionHappeningNow");
@@ -73,16 +86,5 @@ public class ManagerDataStore extends WorldSavedData {
     compound.setInteger("slainSinceStart", slainSinceStart);
     compound.setString("configName", configName == null ? "template" : configName);
     return compound;
-  }
-
-  public static boolean isStored(World worldIn) {
-    MapStorage storage = worldIn.getMapStorage();
-    return storage.getOrLoadData(ManagerDataStore.class, NAME) != null;
-  }
-
-  public static ManagerDataStore retrieveData(World worldIn) {
-    MapStorage storage = worldIn.getMapStorage();
-    ManagerDataStore data = (ManagerDataStore) storage.getOrLoadData(ManagerDataStore.class, NAME);
-    return data;
   }
 }
