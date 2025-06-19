@@ -86,7 +86,7 @@ public class InvadeMobClass {
   private static void prepareEntityCreature(
       EntityCreature creature, EntityPlayerMP player, InvadeMobClass mobClass) {
     creature.targetTasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(creature, player));
-    // creature.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
+    creature.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
     creature.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
   }
 }

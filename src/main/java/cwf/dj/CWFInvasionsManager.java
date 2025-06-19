@@ -209,8 +209,18 @@ public class CWFInvasionsManager {
   }
 
   private static boolean checkForStarting(InvasionConfig config) {
-    long ticksSinceCooldown = world.getTotalWorldTime() - config.__cooldownTSDontChangeMePlz;
-    if (ticksSinceCooldown < config.cooldownTicks) return false;
+    long currentTime = world.getTotalWorldTime();
+    if (config.__cooldownTSDontChangeMePlz == 0) config.__cooldownTSDontChangeMePlz = currentTime;
+    LOGGER.info("Checking for invasion start");
+    long ticksSinceCooldown = currentTime - config.__cooldownTSDontChangeMePlz;
+    if (ticksSinceCooldown < config.cooldownTicks) {
+      LOGGER.info(
+          "Cooldown active, not invading: {} - {} < {}",
+          world.getTotalWorldTime(),
+          config.__cooldownTSDontChangeMePlz,
+          config.cooldownTicks);
+      return false;
+    }
     switch (config.startCondition) {
       case FORTNIGHT:
         if (world.getTotalWorldTime() % (14 * 24000) == 0) {
