@@ -75,14 +75,18 @@ public class InvadeMobClass {
       EntityLivingBase ent, double healthScale, double damageScale) {
     IAttributeInstance health = ent.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH);
     IAttributeInstance damage = ent.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
+    IAttributeInstance speed = ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
+    IAttributeInstance armor = ent.getEntityAttribute(SharedMonsterAttributes.ARMOR);
     if (health != null) health.setBaseValue(health.getBaseValue() * healthScale);
     if (damage != null) damage.setBaseValue(damage.getBaseValue() * damageScale);
+    if (speed != null) speed.setBaseValue(speed.getBaseValue() * 1.05);
+    if (armor != null) armor.setBaseValue(armor.getBaseValue() * 1.10);
   }
 
   private static void prepareEntityCreature(
       EntityCreature creature, EntityPlayerMP player, InvadeMobClass mobClass) {
     creature.tasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(creature, player));
-    creature.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
+    // creature.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
     creature.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
   }
 }
