@@ -39,7 +39,6 @@ public class ManagerDataStore extends WorldSavedData {
     MapStorage storage = worldIn.getMapStorage();
     return storage.getOrLoadData(ManagerDataStore.class, NAME) != null;
   }
-  // TODO: Add working invasion cooldowns
 
   public boolean invasionHappeningNow;
   public long timeAtStart;

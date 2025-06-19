@@ -11,6 +11,8 @@ public class InvasionConfig {
   public int healthScalingWeight = 2;
   public int damageScalingWeight = 1;
   public int totalMobScalingFactor = 2;
+  public long cooldownTicks = 13000;
+  public long __cooldownTSDontChangeMePlz = 0;
   public InvadeMobClass[] mobClasses = {
     new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC, 0, -1, -1),
     new InvadeMobClass("minecraft:skeleton", 2, InvadeMobType.SUPPORT, 0, -1, -1),
@@ -28,15 +30,15 @@ public class InvasionConfig {
     return mobClasses[mobClasses.length - 1];
   }
 
-  public int totalAttributeWeights() {
-    return healthScalingWeight + damageScalingWeight;
-  }
-
   public double getHealthFactor() {
     return 1 + ((healthScalingWeight / totalAttributeWeights()) * totalMobScalingFactor);
   }
 
   public double getDamageFactor() {
     return 1 + ((damageScalingWeight / totalAttributeWeights()) * totalMobScalingFactor);
+  }
+
+  private int totalAttributeWeights() {
+    return healthScalingWeight + damageScalingWeight;
   }
 }

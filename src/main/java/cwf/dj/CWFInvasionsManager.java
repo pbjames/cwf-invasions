@@ -96,10 +96,11 @@ public class CWFInvasionsManager {
     spawnFromConfig(player);
   }
 
-  public static void startInvasion() {
+  public static void startInvasion(InvasionConfig config) {
     LOGGER.info("Invasion starting");
     List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
     players.forEach(player -> player.sendMessage(INVASION_STARTED_MSG));
+    config.__cooldownTSDontChangeMePlz = world.getTotalWorldTime();
     data.invasionHappeningNow = true;
     data.slainSinceStart = 0;
     data.timeAtStart = world.getTotalWorldTime();
@@ -208,29 +209,31 @@ public class CWFInvasionsManager {
   }
 
   private static boolean checkForStarting(InvasionConfig config) {
+    long ticksSinceCooldown = world.getTotalWorldTime() - config.__cooldownTSDontChangeMePlz;
+    if (ticksSinceCooldown < config.cooldownTicks) return false;
     switch (config.startCondition) {
       case FORTNIGHT:
         if (world.getTotalWorldTime() % (14 * 24000) == 0) {
-          startInvasion();
+          startInvasion(config);
           return true;
         }
         break;
       case FULL_MOON:
         if (world.getMoonPhase() == 0) {
-          startInvasion();
+          startInvasion(config);
           return true;
         }
         break;
       case NIGHT:
         long time = world.getWorldTime();
         if (23000 > time && time > 13000) {
-          startInvasion();
+          startInvasion(config);
           return true;
         }
         break;
       case DAY:
         if (world.getWorldTime() == 0) {
-          startInvasion();
+          startInvasion(config);
           return true;
         }
         break;
