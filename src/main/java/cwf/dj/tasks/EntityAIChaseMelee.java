@@ -9,6 +9,10 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
 public class EntityAIChaseMelee<T extends EntityLivingBase> extends EntityAIBase {
+  // INFO: It appears to be the navigators doing that zombies will wander off
+  // to an outdated player position once far away enough, but it's also not our 
+  // problem because this always seems to coincide with dissappearing, and being 
+  // accounted for by the invasion manager logic - inconsequential.
   World world;
   protected EntityCreature attacker;
 
@@ -29,12 +33,13 @@ public class EntityAIChaseMelee<T extends EntityLivingBase> extends EntityAIBase
 
   protected final int attackInterval = 20;
   private T targetEntity;
+  // private static final Logger LOGGER = cwf.dj.CWFInvasions.logger;
 
   public EntityAIChaseMelee(EntityCreature creature, double speedIn, T target) {
     this.attacker = creature;
     this.world = creature.world;
     this.speedTowardsTarget = speedIn;
-    this.longMemory = true;
+    this.longMemory = false;
     this.targetEntity = target;
     this.setMutexBits(3);
   }
@@ -59,12 +64,10 @@ public class EntityAIChaseMelee<T extends EntityLivingBase> extends EntityAIBase
 
   /** Returns whether an in-progress EntityAIBase should continue executing */
   public boolean shouldContinueExecuting() {
-    if (targetEntity == null) {
-      return false;
-    } else if (targetEntity.isEntityAlive()) {
+    if (targetEntity != null && targetEntity.isEntityAlive()) {
       return true;
     } else {
-      return true;
+      return false;
     }
   }
 
@@ -80,7 +83,8 @@ public class EntityAIChaseMelee<T extends EntityLivingBase> extends EntityAIBase
             || ((EntityPlayer) targetEntity).isCreative())) {
       this.attacker.setAttackTarget((EntityLivingBase) null);
     }
-    // this.attacker.getNavigator().clearPath();
+    this.path = this.attacker.getNavigator().getPathToEntityLiving(targetEntity);
+    this.attacker.getNavigator().setPath(this.path, this.speedTowardsTarget);
   }
 
   /** Keep ticking a continuous task that has already been started */
