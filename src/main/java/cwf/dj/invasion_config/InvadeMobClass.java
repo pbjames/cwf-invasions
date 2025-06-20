@@ -6,16 +6,10 @@ import java.lang.reflect.InvocationTargetException;
 import javax.annotation.Nullable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.entity.ai.EntityAITasks.EntityAITaskEntry;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -45,8 +39,8 @@ public class InvadeMobClass {
     this.weight = 1;
     this.type = InvadeMobType.CQC;
     this.yOffset = 0;
-    this.minDist = -1;
-    this.maxDist = -1;
+    this.minDist = 32;
+    this.maxDist = 64;
   }
 
   @Nullable
@@ -90,6 +84,5 @@ public class InvadeMobClass {
       EntityCreature creature, EntityPlayerMP player, InvadeMobClass mobClass) {
     creature.targetTasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(creature, player));
     creature.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
-    creature.setItemStackToSlot(EntityEquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
   }
 }

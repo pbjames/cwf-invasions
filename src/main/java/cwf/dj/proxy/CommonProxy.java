@@ -3,7 +3,6 @@ package cwf.dj.proxy;
 import cwf.dj.CWFInvasions;
 import cwf.dj.capabilities.CapabilityStarLevel;
 import cwf.dj.invasion_config.InvasionConfigCollection;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import net.minecraft.block.Block;

@@ -16,6 +16,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -113,12 +115,13 @@ public class CWFInvasionsManager {
   }
 
   private static void invade(EntityPlayerMP player, int playerCount) {
-    int maintenanceLevel = Configuration.common.mobMaintainCount;
+    int maintenanceLevel = getChosenConfig().maintainedPopulation;
     removeUnaccountedMobs();
     if (activeMobs.size() >= (maintenanceLevel * playerCount)) return;
     spawnFromConfig(player);
   }
 
+  @Nullable
   private static InvasionConfig getChosenConfig() {
     return InvasionConfigCollection.configs.get(data.configName);
   }
@@ -157,11 +160,7 @@ public class CWFInvasionsManager {
     InvadeMobClass mobClass = getChosenConfig().pickRandomMobClass();
     double healthScale = getChosenConfig().getHealthFactor();
     double damageScale = getChosenConfig().getDamageFactor();
-    int minDistMob =
-        mobClass.minDist == -1 ? Configuration.common.minInvadeDistance : mobClass.minDist;
-    int maxDistMob =
-        mobClass.maxDist == -1 ? Configuration.common.maxInvadeDistance : mobClass.maxDist;
-    BlockPos spawnPos = findAirBlockNear(player, minDistMob, maxDistMob);
+    BlockPos spawnPos = findAirBlockNear(player, mobClass.minDist, mobClass.maxDist);
     Entity spawnedEntity = mobClass.spawn(player, spawnPos, healthScale, damageScale);
     activeMobs.add(spawnedEntity);
   }
