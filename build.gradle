@@ -2,16 +2,19 @@ buildscript {
 	repositories {
 		mavenCentral()
 		maven { url = "https://maven.minecraftforge.net/" }
+        maven { url = "https://plugins.gradle.org/m2/" }
 	}
 	
 	dependencies {
 		classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.1.+"
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
 	}
 }
 
 apply plugin: "java"
 apply plugin: "net.minecraftforge.gradle"
 apply plugin: "eclipse"
+apply plugin: 'com.github.johnrengelman.shadow'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 compileJava {
@@ -31,13 +34,14 @@ repositories {
 }
 
 dependencies {
-	minecraft "net.minecraftforge:forge:1.12.2-14.23.5.2860"
+	minecraft "net.minecraftforge:forge:1.12.2-14.23.5.2859"
     implementation 'org.yaml:snakeyaml:1.29'
     implementation fg.deobf("curse.maven:techguns-244201:2958103")
 }
 
 minecraft {
 	mappings channel: "stable", version: "39-1.12"
+    //mappings channel: 'snapshot', version: '20171003-1.12'
 	
 	runs {
 		"client" {
@@ -58,6 +62,12 @@ processResources {
 	filesMatching("mcmod.info") {
 		expand "version": project.version
 	}
+}
+
+shadowJar {
+    dependencies {
+        include(dependency('org.yaml:snakeyaml'))
+    }
 }
 
 //When Forge 1.12 loads mods from a directory that's been put on the classpath, it expects to find resources in the same directory.
