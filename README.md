@@ -40,13 +40,8 @@ And run it:
 
 To compile for the modpack:
 
-```
-shadowJar {
-    dependencies {
-        include(dependency('org.yaml:snakeyaml'))
-    }
-}
-
+```sh
+./gradlew shadowJar reobfShadowJar
 ```
 
 ## Common problems
