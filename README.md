@@ -35,6 +35,18 @@ And run it:
 
 ```sh
 ./gradlew runClient
+
+```
+
+To compile for the modpack:
+
+```
+shadowJar {
+    dependencies {
+        include(dependency('org.yaml:snakeyaml'))
+    }
+}
+
 ```
 
 ## Common problems
