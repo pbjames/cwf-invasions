@@ -2,6 +2,7 @@ package cwf.dj.invasion_config;
 
 import cwf.dj.tasks.EntityAIChaseMelee;
 import cwf.dj.tasks.EntityAIOmniSetTarget;
+import cwf.dj.tasks.EntityAIOmniSetTargetHeli;
 import java.lang.reflect.InvocationTargetException;
 import javax.annotation.Nullable;
 import net.minecraft.entity.Entity;
@@ -15,6 +16,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import techguns.entities.npcs.AttackHelicopter;
 
 public class InvadeMobClass {
   public final String ent;
@@ -54,6 +56,7 @@ public class InvadeMobClass {
         applyScaledAttributes((EntityLivingBase) realEntity, healthScale, damageScale);
       if (realEntity instanceof EntityCreature)
         prepareEntityCreature((EntityCreature) realEntity, player, this);
+      if (realEntity instanceof AttackHelicopter) buffHeli((AttackHelicopter) realEntity, player);
       realEntity.setPosition(spawnPos.getX(), spawnPos.getY() + yOffset, spawnPos.getZ());
       player.world.spawnEntity(realEntity);
       return realEntity;
@@ -66,6 +69,11 @@ public class InvadeMobClass {
       e.printStackTrace();
       return null;
     }
+  }
+
+  private void buffHeli(AttackHelicopter attackHeli, EntityPlayerMP player) {
+    attackHeli.targetTasks.addTask(
+        1, new EntityAIOmniSetTargetHeli<EntityPlayerMP>(attackHeli, player));
   }
 
   private static void applyScaledAttributes(
