@@ -3,7 +3,6 @@ package cwf.dj;
 import cwf.dj.invasion_config.InvadeMobClass;
 import cwf.dj.invasion_config.InvasionConfig;
 import cwf.dj.invasion_config.InvasionConfigCollection;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,20 +13,21 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -38,7 +38,7 @@ import org.apache.logging.log4j.Logger;
 @Mod.EventBusSubscriber
 public class CWFInvasionsManager {
   private static ManagerDataStore data;
-  public static List<Entity> activeMobs = new ArrayList<>();
+  public static Set<Entity> activeMobs = new HashSet<>();
   public static final Random RANDOM = new Random();
   public static final Logger LOGGER = CWFInvasions.logger;
   public static final MinecraftServer SERVER =
@@ -63,6 +63,19 @@ public class CWFInvasionsManager {
       for (EntityPlayerMP player : players) if (getInvasion()) invade(player, players.size());
     if (world.getTotalWorldTime() % slowCheckTime == 0) {
       players.forEach(player -> checkSetInvasion(player));
+    }
+  }
+
+  @SubscribeEvent
+  public static void onMobDeath(LivingDeathEvent event) {
+    EntityLivingBase entity = event.getEntityLiving();
+    if (!activeMobs.contains(entity)) return;
+    DamageSource source = event.getSource();
+    if (source.getTrueSource() != null) {
+      if (source.getTrueSource() instanceof EntityPlayer) {
+        data.slainSinceStart += 1;
+        data.markDirty();
+      }
     }
   }
 
@@ -116,7 +129,6 @@ public class CWFInvasionsManager {
 
   private static void invade(EntityPlayerMP player, int playerCount) {
     int maintenanceLevel = getChosenConfig().maintainedPopulation;
-    removeUnaccountedMobs();
     if (activeMobs.size() >= (maintenanceLevel * playerCount)) return;
     spawnFromConfig(player);
   }
@@ -163,16 +175,6 @@ public class CWFInvasionsManager {
     BlockPos spawnPos = findAirBlockNear(player, mobClass.minDist, mobClass.maxDist);
     Entity spawnedEntity = mobClass.spawn(player, spawnPos, healthScale, damageScale);
     activeMobs.add(spawnedEntity);
-  }
-
-  private static void removeUnaccountedMobs() {
-    int oldCount = activeMobs.size();
-    activeMobs =
-        activeMobs.stream()
-            .filter(mob -> !mob.isDead || mob.isAddedToWorld())
-            .collect(Collectors.toList());
-    data.slainSinceStart += oldCount - activeMobs.size();
-    data.markDirty();
   }
 
   private static void checkSetInvasion(@Nonnull EntityPlayerMP player) {
