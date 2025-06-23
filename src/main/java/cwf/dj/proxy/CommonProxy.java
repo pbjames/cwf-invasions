@@ -20,7 +20,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 @Mod.EventBusSubscriber
 public class CommonProxy {
-  private static Path modConfigDir;
+  public static Path modConfigDir;
 
   public void preInit(FMLPreInitializationEvent e) {
     CapabilityStarLevel.register();

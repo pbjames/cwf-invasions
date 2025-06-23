@@ -7,7 +7,13 @@ import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+
+import java.io.IOException;
+
 import org.apache.logging.log4j.Logger;
+
+import cwf.dj.invasion_config.InvasionConfigCollection;
+import cwf.dj.proxy.CommonProxy;
 
 @Mod.EventBusSubscriber
 public class ManagerDataStore extends WorldSavedData {
@@ -27,6 +33,11 @@ public class ManagerDataStore extends WorldSavedData {
       }
       CWFInvasionsManager.logConfig();
     }
+    try {
+		InvasionConfigCollection.loadFrom(CommonProxy.modConfigDir);
+	} catch (IOException e) {
+		e.printStackTrace();
+	}
   }
 
   public static ManagerDataStore retrieveData(World worldIn) {
