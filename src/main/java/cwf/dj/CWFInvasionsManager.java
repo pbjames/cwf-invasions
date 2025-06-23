@@ -73,6 +73,7 @@ public class CWFInvasionsManager {
     DamageSource source = event.getSource();
     if (source.getTrueSource() != null) {
       if (source.getTrueSource() instanceof EntityPlayer) {
+        activeMobs.remove(entity);
         data.slainSinceStart += 1;
         data.markDirty();
       }
@@ -141,8 +142,9 @@ public class CWFInvasionsManager {
   private static BlockPos findAirBlockNear(EntityPlayer player, int minDist, int maxDist) {
     int maxDistSq = maxDist * maxDist;
     int minDistSq = minDist * minDist;
-    int randomX = (RANDOM.nextBoolean() ? -1 : 1) * RANDOM.nextInt(maxDist - minDist) + minDist;
-    int randomZ = (RANDOM.nextBoolean() ? -1 : 1) * RANDOM.nextInt(maxDist - minDist) + minDist;
+    int distDiff = maxDist - minDist;
+    int randomX = RANDOM.nextInt(2 * distDiff) - distDiff + minDist;
+    int randomZ = RANDOM.nextInt(2 * distDiff) - distDiff + minDist;
     BlockPos start = player.getPosition();
     Set<BlockPos> visited = new HashSet<>();
     Queue<BlockPos> queue = new LinkedList<>();
@@ -256,7 +258,7 @@ public class CWFInvasionsManager {
     List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
     switch (config.endingCondition) {
       case MOBCOUNT:
-        if (data.slainSinceStart * players.size() >= config.mobCountToEnd) {
+        if (data.slainSinceStart / players.size() >= config.mobCountToEnd) {
           endInvasion();
           return true;
         }
