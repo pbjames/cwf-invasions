@@ -26,10 +26,10 @@ public class ManagerDataStore extends WorldSavedData {
     if (!world.isRemote && world.provider.getDimension() == 0) {
       if (ManagerDataStore.isStored(world)) {
         LOGGER.info("Found save data‼");
-        CWFInvasionsManager.loadFromWorld(world);
+        CWFInvasionsManager.loadWorldData(world);
       } else {
         LOGGER.info("No save data, making it‼");
-        CWFInvasionsManager.createAndStoreData(world);
+        CWFInvasionsManager.createWorldData(world);
       }
       CWFInvasionsManager.logConfig();
     }

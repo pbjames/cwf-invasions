@@ -15,6 +15,7 @@ import java.util.Random;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -80,7 +81,7 @@ public class CWFInvasionsManager {
     }
   }
 
-  public static void createAndStoreData(World worldIn) {
+  public static void createWorldData(World worldIn) {
     // INFO: Assume if we have no world data, there's no invasion history
     ManagerDataStore data = new ManagerDataStore();
     worldIn.getMapStorage().setData(ManagerDataStore.NAME, data);
@@ -89,13 +90,13 @@ public class CWFInvasionsManager {
     setWorld(worldIn);
   }
 
-  public static void loadFromWorld(World worldIn) {
+  public static void loadWorldData(World worldIn) {
     ManagerDataStore dataFrom = ManagerDataStore.retrieveData(worldIn);
     setData(dataFrom);
     setWorld(worldIn);
   }
 
-  public static void logConfig() {
+  public static void logSelf() {
     LOGGER.info(
         "logConfig():"
             + " CWFInvasionsManager[invasion={},timeAtStart={},slainSinceStart={},configName={}]",
@@ -105,7 +106,11 @@ public class CWFInvasionsManager {
         data.configName);
   }
 
-  public static void startInvasion(InvasionConfig config) {
+  public static boolean getInvasion() {
+    return data.invasionHappeningNow;
+  }
+
+  private static void startInvasion(InvasionConfig config) {
     LOGGER.info("Invasion starting");
     List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
     players.forEach(player -> player.sendMessage(INVASION_STARTED_MSG));
@@ -116,16 +121,18 @@ public class CWFInvasionsManager {
     data.markDirty();
   }
 
-  public static void endInvasion() {
+  private static void endInvasion(InvasionConfig config) {
     LOGGER.info("Invasion ending");
     List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
-    players.forEach(player -> player.sendMessage(INVASION_ENDED_MSG));
+    for (EntityPlayerMP player : players) {
+      player.sendMessage(INVASION_ENDED_MSG);
+      if (!config.gameStageAwarded.isEmpty()) {
+        GameStageHelper.addStage(player, config.gameStageAwarded);
+        GameStageHelper.syncPlayer(player);
+      }
+    }
     data.invasionHappeningNow = false;
     data.markDirty();
-  }
-
-  public static boolean getInvasion() {
-    return data.invasionHappeningNow;
   }
 
   private static void invade(EntityPlayerMP player, int playerCount) {
@@ -187,7 +194,8 @@ public class CWFInvasionsManager {
       // and stick with that for the end condition
       // Perhaps in the future, we could manager multiple invasions simultaneously
       for (InvasionConfig config : InvasionConfigCollection.configs.values()) {
-        if (checkForStarting(config)) {
+        if (checkForStarting(player, config)) {
+          startInvasion(config);
           data.configName = reverseMap(InvasionConfigCollection.configs).get(config);
           data.markDirty();
           return;
@@ -211,8 +219,9 @@ public class CWFInvasionsManager {
     return reversed;
   }
 
-  private static boolean checkForStarting(InvasionConfig config) {
+  private static boolean checkForStarting(EntityPlayerMP player, InvasionConfig config) {
     long currentTime = world.getTotalWorldTime();
+    // INFO: 0 -> stand-in value for whatever the current world time is when we load in
     if (config.__cooldownTSDontChangeMePlz == 0) config.__cooldownTSDontChangeMePlz = currentTime;
     LOGGER.info("Checking for invasion start");
     long ticksSinceCooldown = currentTime - config.__cooldownTSDontChangeMePlz;
@@ -224,29 +233,29 @@ public class CWFInvasionsManager {
           config.cooldownTicks);
       return false;
     }
+    if (config.dimensionRequired != -1
+        && config.dimensionRequired != player.world.provider.getDimension()) return false;
+    if (config.gameStageRequired.isEmpty()
+        || !GameStageHelper.hasStage(player, config.gameStageRequired)) return false;
     switch (config.startCondition) {
       case FORTNIGHT:
         if (world.getTotalWorldTime() % (14 * 24000) == 0) {
-          startInvasion(config);
           return true;
         }
         break;
       case FULL_MOON:
         if (world.getMoonPhase() == 0) {
-          startInvasion(config);
           return true;
         }
         break;
       case NIGHT:
         long time = world.getWorldTime();
         if (23000 > time && time > 13000) {
-          startInvasion(config);
           return true;
         }
         break;
       case DAY:
         if (world.getWorldTime() == 0) {
-          startInvasion(config);
           return true;
         }
         break;
@@ -259,14 +268,14 @@ public class CWFInvasionsManager {
     switch (config.endingCondition) {
       case MOBCOUNT:
         if (data.slainSinceStart / players.size() >= config.mobCountToEnd) {
-          endInvasion();
+          endInvasion(config);
           return true;
         }
         break;
       case TIME:
         long timeDelta = world.getTotalWorldTime() - data.timeAtStart;
         if (timeDelta >= config.timeToEndTicks) {
-          endInvasion();
+          endInvasion(config);
           return true;
         }
         break;

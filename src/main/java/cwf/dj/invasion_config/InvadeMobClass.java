@@ -1,6 +1,5 @@
 package cwf.dj.invasion_config;
 
-import cwf.dj.tasks.EntityAIChaseMelee;
 import cwf.dj.tasks.EntityAIOmniSetTarget;
 import cwf.dj.tasks.EntityAIOmniSetTargetHeli;
 import java.lang.reflect.InvocationTargetException;

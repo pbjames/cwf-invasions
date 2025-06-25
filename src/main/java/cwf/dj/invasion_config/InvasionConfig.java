@@ -13,6 +13,9 @@ public class InvasionConfig {
   public int totalMobScalingFactor = 2;
   public long cooldownTicks = 13000;
   public long __cooldownTSDontChangeMePlz = 0;
+  public int dimensionRequired = 0;
+  public String gameStageRequired = "";
+  public String gameStageAwarded = "";
   public InvadeMobClass[] mobClasses = {
     new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC, 0, -1, -1),
     new InvadeMobClass("minecraft:skeleton", 2, InvadeMobType.SUPPORT, 0, -1, -1),

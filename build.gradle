@@ -37,6 +37,7 @@ dependencies {
 	minecraft "net.minecraftforge:forge:1.12.2-14.23.5.2859"
     implementation 'org.yaml:snakeyaml:1.29'
     implementation fg.deobf("curse.maven:techguns-244201:2958103")
+    implementation fg.deobf("curse.maven:game-stages-268655:2951840")
 }
 
 minecraft {
