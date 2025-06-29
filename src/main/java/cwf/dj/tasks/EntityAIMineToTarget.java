@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
@@ -26,10 +27,18 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
   class DijkstraNode {
     public double totalWeight;
     public BlockPos pos;
+    public @Nullable DijkstraNode parent;
 
-    DijkstraNode(double totalWeight, BlockPos pos) {
+    DijkstraNode(double totalWeight, BlockPos pos, @Nullable DijkstraNode parent) {
       this.totalWeight = totalWeight;
       this.pos = pos;
+      this.parent = parent;
+    }
+
+    public String toString() {
+      return String.format(
+          "DijkstraNode<totalWeight=%.2f,weight=%.2f@x=%d,y=%d,z=%d>",
+          totalWeight, getWeight(), pos.getX(), pos.getY(), pos.getZ());
     }
 
     double getWeight() {
@@ -38,7 +47,7 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
       return getWeightOfPos(pos.down(), Double.POSITIVE_INFINITY)
           + getWeightOfPos(pos, 0)
           + getWeightOfPos(pos.up(), 0)
-          + sqDistanceToEntity;
+          + sqDistanceToEntity / 10;
     }
 
     double getWeightOfPos(BlockPos posIn, double airValue) {
@@ -59,10 +68,9 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
           new BlockPos[] {pos.up(), pos.down(), pos.north(), pos.east(), pos.south(), pos.west()});
     }
 
-    public String toString() {
-      return String.format(
-          "DijkstraNode<totalWeight=%.2f,weight=%.2f@x=%d,y=%d,z=%d>",
-          totalWeight, getWeight(), pos.getX(), pos.getY(), pos.getZ());
+    @Override
+    public int hashCode() {
+      return Objects.hash(this.totalWeight, this.pos);
     }
   }
 
@@ -72,7 +80,7 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
   private final T targetEntity;
   private @Nullable Vec3d lastTrackedPosition;
   private int idleTicks = 0;
-  private final int IDLE_THRESHOLD = 5;
+  private final int IDLE_THRESHOLD = 20;
   private Queue<BlockPos> path = new ArrayDeque<>();
   private int miningTick = 0;
 
@@ -86,6 +94,7 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
   /** Returns whether the EntityAIBase should begin execution. */
   @Override
   public boolean shouldExecute() {
+    LOGGER.info("Should execute: idle {}, onGround {}", isIdle(), us.onGround);
     return isIdle() && us.onGround;
   }
 
@@ -93,6 +102,10 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
   @Override
   public boolean shouldContinueExecuting() {
     // INFO: Could be ineffecient
+    LOGGER.info(
+        "Should continue executing?: path {}, onGround {}",
+        us.getNavigator().getPathToEntityLiving(targetEntity),
+        us.onGround);
     return us.getNavigator().getPathToEntityLiving(targetEntity) == null && us.onGround;
   }
 
@@ -133,16 +146,17 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
     Set<BlockPos> visited = new HashSet<>();
     PriorityQueue<DijkstraNode> minHeap =
         new PriorityQueue<>(Comparator.comparingDouble(dn -> dn.totalWeight));
-    minHeap.add(new DijkstraNode(0D, us.getPosition()));
+    minHeap.add(new DijkstraNode(0D, us.getPosition(), null));
     boolean goingUp = false;
     while (!minHeap.isEmpty()) {
       DijkstraNode root = minHeap.poll();
       visited.add(root.pos);
       LOGGER.info("Visited Node {} with block {}", root, world.getBlockState(root.pos).getBlock());
-      LOGGER.info("Node {} vs {}", root.pos, pos);
       if (root.pos.equals(pos)) {
-        LOGGER.info("FOUND PLAYER");
-        path.addAll(visited);
+        while (root != null) {
+          path.add(root.pos);
+          root = root.parent;
+        }
         return;
       }
       for (BlockPos neighbour : root.getNeighbours()) {
@@ -151,11 +165,10 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
           if (goingUp) {
             goingUp = false;
             continue;
-          } else {
-            goingUp = true;
-          }
+          } else goingUp = true;
         }
-        minHeap.add(new DijkstraNode(root.totalWeight + root.getWeight(), neighbour));
+        minHeap.add(new DijkstraNode(root.totalWeight + root.getWeight(), neighbour, root));
+        if (root.totalWeight == Double.POSITIVE_INFINITY) return;
       }
     }
   }
@@ -165,7 +178,9 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
       lastTrackedPosition = us.getPositionVector();
       return false;
     }
-    double sqDistTravelled = us.getPositionVector().squareDistanceTo(lastTrackedPosition);
+    Vec3d currentPosition = us.getPositionVector();
+    double sqDistTravelled = currentPosition.squareDistanceTo(lastTrackedPosition);
+    lastTrackedPosition = currentPosition;
     if (sqDistTravelled < 0.1D) idleTicks++;
     else idleTicks = 0;
     return idleTicks > IDLE_THRESHOLD;
