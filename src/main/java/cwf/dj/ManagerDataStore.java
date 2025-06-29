@@ -31,7 +31,7 @@ public class ManagerDataStore extends WorldSavedData {
         LOGGER.info("No save data, making it‼");
         CWFInvasionsManager.createWorldData(world);
       }
-      CWFInvasionsManager.logConfig();
+      CWFInvasionsManager.logSelf();
     }
     try {
 		InvasionConfigCollection.loadFrom(CommonProxy.modConfigDir);

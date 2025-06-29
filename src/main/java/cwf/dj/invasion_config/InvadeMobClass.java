@@ -1,5 +1,6 @@
 package cwf.dj.invasion_config;
 
+import cwf.dj.tasks.EntityAIMineToTarget;
 import cwf.dj.tasks.EntityAIOmniSetTarget;
 import cwf.dj.tasks.EntityAIOmniSetTargetHeli;
 import java.lang.reflect.InvocationTargetException;
@@ -10,6 +11,8 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.MobEffects;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -92,6 +95,8 @@ public class InvadeMobClass {
   private static void prepareEntityCreature(
       EntityCreature creature, EntityPlayerMP player, InvadeMobClass mobClass) {
     creature.targetTasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(creature, player));
-    //creature.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
+    creature.targetTasks.addTask(1, new EntityAIMineToTarget<EntityPlayerMP>(creature, 1, player));
+    creature.addPotionEffect(new PotionEffect(MobEffects.GLOWING, 10000, 0));
+    // creature.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
   }
 }

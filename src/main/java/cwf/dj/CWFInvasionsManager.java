@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.darkhax.gamestages.GameStageHelper;
@@ -57,27 +58,26 @@ public class CWFInvasionsManager {
     if (event.phase != Phase.START) return;
     if (world == null) return;
     if (data == null) return;
-    int slowCheckTime = Configuration.common.slowTickTime;
-    int fastCheckTime = Configuration.common.fastTickTime;
+    // TODO: Use playerIDs and avoid using direct player references because
+    // they can leave the game
     List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
-    if (world.getTotalWorldTime() % fastCheckTime == 0)
+    if (world.getTotalWorldTime() % Configuration.common.fastTickTime == 0)
       for (EntityPlayerMP player : players) if (getInvasion()) invade(player, players.size());
-    if (world.getTotalWorldTime() % slowCheckTime == 0) {
+    if (world.getTotalWorldTime() % Configuration.common.slowTickTime == 0) {
       players.forEach(player -> checkSetInvasion(player));
     }
+    LOGGER.info("Active mobs: {}", activeMobs);
   }
 
   @SubscribeEvent
   public static void onMobDeath(LivingDeathEvent event) {
     EntityLivingBase entity = event.getEntityLiving();
     if (!activeMobs.contains(entity)) return;
+    activeMobs.remove(entity);
     DamageSource source = event.getSource();
-    if (source.getTrueSource() != null) {
-      if (source.getTrueSource() instanceof EntityPlayer) {
-        activeMobs.remove(entity);
-        data.slainSinceStart += 1;
-        data.markDirty();
-      }
+    if (source.getTrueSource() != null || source.getTrueSource() instanceof EntityPlayer) {
+      data.slainSinceStart += 1;
+      data.markDirty();
     }
   }
 
@@ -137,6 +137,7 @@ public class CWFInvasionsManager {
 
   private static void invade(EntityPlayerMP player, int playerCount) {
     int maintenanceLevel = getChosenConfig().maintainedPopulation;
+    activeMobs = activeMobs.stream().filter(mob -> mob.isAddedToWorld()).collect(Collectors.toSet());
     if (activeMobs.size() >= (maintenanceLevel * playerCount)) return;
     spawnFromConfig(player);
   }
@@ -235,8 +236,8 @@ public class CWFInvasionsManager {
     }
     if (config.dimensionRequired != -1
         && config.dimensionRequired != player.world.provider.getDimension()) return false;
-    if (config.gameStageRequired.isEmpty()
-        || !GameStageHelper.hasStage(player, config.gameStageRequired)) return false;
+    if (!config.gameStageRequired.isEmpty()
+        && !GameStageHelper.hasStage(player, config.gameStageRequired)) return false;
     switch (config.startCondition) {
       case FORTNIGHT:
         if (world.getTotalWorldTime() % (14 * 24000) == 0) {

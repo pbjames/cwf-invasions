@@ -38,12 +38,11 @@ dependencies {
     implementation 'org.yaml:snakeyaml:1.29'
     implementation fg.deobf("curse.maven:techguns-244201:2958103")
     implementation fg.deobf("curse.maven:game-stages-268655:2951840")
+    implementation fg.deobf("curse.maven:bookshelf-228525:2727800")
 }
 
 minecraft {
 	mappings channel: "stable", version: "39-1.12"
-    //mappings channel: 'snapshot', version: '20171003-1.12'
-	
 	runs {
 		"client" {
 			workingDirectory file("./run")
