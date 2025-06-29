@@ -163,7 +163,7 @@ public class CWFInvasionsManager {
       BlockPos adjustedPos = castDownBlockPos(player.world, pos);
       IBlockState state = player.world.getBlockState(pos);
       double distFromStart = start.distanceSq(adjustedPos);
-      if (state.getBlock() == Blocks.AIR
+      if (state.getBlock().equals(Blocks.AIR)
           && (distFromStart > minDistSq)
           && (distFromStart < maxDistSq)) return adjustedPos.add(0, player.getEyeHeight(), 0);
       for (BlockPos offset : getNeighborOffsets()) {

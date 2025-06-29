@@ -46,8 +46,9 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
       double hardness = state.getBlockHardness(world, posIn);
       boolean indestructible = hardness < 0D;
       boolean isLavaAdjacent =
-          getNeighbours().stream().anyMatch(p -> world.getBlockState(p).getBlock() == Blocks.LAVA);
-      boolean isAir = world.getBlockState(posIn).getBlock() == Blocks.AIR;
+          getNeighbours().stream()
+              .anyMatch(p -> world.getBlockState(p).getBlock().equals(Blocks.LAVA));
+      boolean isAir = world.getBlockState(posIn).getBlock().equals(Blocks.AIR);
       return hardness
           + (isAir ? airValue : 0)
           + (indestructible && !isAir || isLavaAdjacent ? Double.POSITIVE_INFINITY : 0D);
@@ -119,7 +120,7 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
       miningTick++;
       BlockPos miningPos = path.poll();
       LOGGER.info("CONSUMING PATH");
-      //world.setBlockState(miningPos, Blocks.DIAMOND_BLOCK.getDefaultState());
+      // world.setBlockState(miningPos, Blocks.DIAMOND_BLOCK.getDefaultState());
       world.destroyBlock(miningPos, true);
       world.destroyBlock(miningPos.add(0, 1, 0), true);
       if (miningTick % 3 == 0)
@@ -146,7 +147,7 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
       }
       for (BlockPos neighbour : root.getNeighbours()) {
         if (visited.contains(neighbour)) continue;
-        if (neighbour == root.pos.up()) {
+        if (neighbour.equals(root.pos.up())) {
           if (goingUp) {
             goingUp = false;
             continue;
