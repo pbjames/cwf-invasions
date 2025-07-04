@@ -47,7 +47,7 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
       return getWeightOfPos(pos.down(), Double.POSITIVE_INFINITY)
           + getWeightOfPos(pos, 0)
           + getWeightOfPos(pos.up(), 0)
-          + sqDistanceToEntity / 10;
+          + sqDistanceToEntity * 10;
     }
 
     double getWeightOfPos(BlockPos posIn, double airValue) {
@@ -106,7 +106,9 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
         "Should continue executing?: path {}, onGround {}",
         us.getNavigator().getPathToEntityLiving(targetEntity),
         us.onGround);
-    return us.getNavigator().getPathToEntityLiving(targetEntity) == null && us.onGround;
+    return us.getNavigator().getPathToEntityLiving(targetEntity) == null
+        && us.onGround
+        && !path.isEmpty();
   }
 
   /** Execute a one shot task or start executing a continuous task */
@@ -141,18 +143,28 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
     }
   }
 
+  private static boolean isACloseToB(BlockPos a, BlockPos b) {
+    return Math.abs(a.getX() - b.getX() + a.getY() - b.getY() + a.getZ() - b.getZ()) <= 1;
+  }
+
   @Nullable
   private void setMiningPathToPos(BlockPos pos) {
     Set<BlockPos> visited = new HashSet<>();
     PriorityQueue<DijkstraNode> minHeap =
         new PriorityQueue<>(Comparator.comparingDouble(dn -> dn.totalWeight));
     minHeap.add(new DijkstraNode(0D, us.getPosition(), null));
-    boolean goingUp = false;
+    boolean avoidDirectUp = false;
+    double minDistance = Double.POSITIVE_INFINITY;
     while (!minHeap.isEmpty()) {
       DijkstraNode root = minHeap.poll();
       visited.add(root.pos);
-      LOGGER.info("Visited Node {} with block {}", root, world.getBlockState(root.pos).getBlock());
-      if (root.pos.equals(pos)) {
+      if (root.totalWeight == Double.POSITIVE_INFINITY) return;
+      double distanceToTarget = targetEntity.getDistanceSq(root.pos);
+      minDistance = (minDistance < distanceToTarget) ? minDistance : distanceToTarget;
+      //LOGGER.info("Min distance: {}, distance: {}", minDistance, distanceToTarget);
+      if ((minDistance / distanceToTarget) < 0.6) continue;
+      //LOGGER.info("Visited Node {} with block {}", root, world.getBlockState(root.pos).getBlock());
+      if (isACloseToB(root.pos, pos)) {
         while (root != null) {
           path.add(root.pos);
           root = root.parent;
@@ -162,13 +174,12 @@ public class EntityAIMineToTarget<T extends EntityLivingBase> extends EntityAIBa
       for (BlockPos neighbour : root.getNeighbours()) {
         if (visited.contains(neighbour)) continue;
         if (neighbour.equals(root.pos.up())) {
-          if (goingUp) {
-            goingUp = false;
+          if (avoidDirectUp) {
+            avoidDirectUp = false;
             continue;
-          } else goingUp = true;
+          } else avoidDirectUp = true;
         }
         minHeap.add(new DijkstraNode(root.totalWeight + root.getWeight(), neighbour, root));
-        if (root.totalWeight == Double.POSITIVE_INFINITY) return;
       }
     }
   }
