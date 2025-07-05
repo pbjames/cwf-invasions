@@ -1,6 +1,5 @@
 package cwf.dj.invasion_config;
 
-import cwf.dj.tasks.EntityAIMineToTarget;
 import cwf.dj.tasks.EntityAIOmniSetTarget;
 import cwf.dj.tasks.EntityAIOmniSetTargetHeli;
 import java.lang.reflect.InvocationTargetException;
@@ -57,7 +56,7 @@ public class InvadeMobClass {
       if (realEntity instanceof EntityLivingBase)
         applyScaledAttributes((EntityLivingBase) realEntity, healthScale, damageScale);
       if (realEntity instanceof EntityCreature)
-        prepareEntityCreature((EntityCreature) realEntity, player, this);
+        prepareEntityCreature((EntityCreature) realEntity, player);
       if (realEntity instanceof AttackHelicopter) buffHeli((AttackHelicopter) realEntity, player);
       realEntity.setPosition(spawnPos.getX(), spawnPos.getY() + yOffset, spawnPos.getZ());
       player.world.spawnEntity(realEntity);
@@ -85,18 +84,16 @@ public class InvadeMobClass {
     IAttributeInstance speed = ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
     IAttributeInstance armor = ent.getEntityAttribute(SharedMonsterAttributes.ARMOR);
     IAttributeInstance range = ent.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE);
-    range.setBaseValue(160D);
+    if (range != null) range.setBaseValue(160D);
     if (health != null) health.setBaseValue(health.getBaseValue() * healthScale);
     if (damage != null) damage.setBaseValue(damage.getBaseValue() * damageScale);
     if (speed != null) speed.setBaseValue(speed.getBaseValue() * 1.05);
     if (armor != null) armor.setBaseValue(armor.getBaseValue() * 1.10);
   }
 
-  private static void prepareEntityCreature(
-      EntityCreature creature, EntityPlayerMP player, InvadeMobClass mobClass) {
+  private void prepareEntityCreature(
+      EntityCreature creature, EntityPlayerMP player) {
     creature.targetTasks.addTask(2, new EntityAIOmniSetTarget<EntityPlayerMP>(creature, player));
-    creature.targetTasks.addTask(1, new EntityAIMineToTarget<EntityPlayerMP>(creature, 1, player));
-    creature.addPotionEffect(new PotionEffect(MobEffects.GLOWING, 10000, 0));
-    // creature.tasks.addTask(2, new EntityAIChaseMelee<EntityPlayerMP>(creature, 1.0D, player));
+    type.applySpecialTasks(creature, player);
   }
 }

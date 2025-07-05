@@ -137,7 +137,8 @@ public class CWFInvasionsManager {
 
   private static void invade(EntityPlayerMP player, int playerCount) {
     int maintenanceLevel = getChosenConfig().maintainedPopulation;
-    activeMobs = activeMobs.stream().filter(mob -> mob.isAddedToWorld()).collect(Collectors.toSet());
+    activeMobs =
+        activeMobs.stream().filter(mob -> mob.isAddedToWorld()).collect(Collectors.toSet());
     if (activeMobs.size() >= (maintenanceLevel * playerCount)) return;
     spawnFromConfig(player);
   }
@@ -156,7 +157,9 @@ public class CWFInvasionsManager {
     BlockPos start = player.getPosition();
     Set<BlockPos> visited = new HashSet<>();
     Queue<BlockPos> queue = new LinkedList<>();
-    queue.add(new BlockPos(start.add(randomX, player.getEyeHeight(), randomZ)));
+    BlockPos randomPos = new BlockPos(start.add(randomX, player.getEyeHeight(), randomZ));
+    LOGGER.info("Random pos: {}", randomPos);
+    queue.add(randomPos);
     visited.add(start);
     while (!queue.isEmpty()) {
       BlockPos pos = queue.poll();

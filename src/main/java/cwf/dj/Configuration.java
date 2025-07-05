@@ -24,5 +24,9 @@ public class Configuration {
     @Comment("How often we refresh mobs in the invasion in ticks")
     @RangeInt(min = 1)
     public int fastTickTime = 5 * 20;
+
+    @Name("Miners Glow")
+    @Comment("Make mining mobs glow to make them easier to spot")
+    public boolean minersGlow = true;
   }
 }
