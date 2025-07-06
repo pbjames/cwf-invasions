@@ -4,5 +4,6 @@ public enum InvadeStartCondition {
   DAY,
   NIGHT,
   FORTNIGHT,
-  FULL_MOON;
+  FULL_MOON,
+  NEVER
 }

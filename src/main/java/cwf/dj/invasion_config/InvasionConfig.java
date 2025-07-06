@@ -17,8 +17,8 @@ public class InvasionConfig {
   public String gameStageRequired = "";
   public String gameStageAwarded = "";
   public InvadeMobClass[] mobClasses = {
-    new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC, 0, -1, -1),
-    new InvadeMobClass("minecraft:skeleton", 1, InvadeMobType.MINER, 0, -1, -1),
+    new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC, 0, 16, 32),
+    new InvadeMobClass("minecraft:skeleton", 1, InvadeMobType.MINER, 0, 30, 40),
   };
 
   public InvadeMobClass pickRandomMobClass() {

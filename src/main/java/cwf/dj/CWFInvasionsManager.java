@@ -192,7 +192,8 @@ public class CWFInvasionsManager {
 
   private static void checkSetInvasion(@Nonnull EntityPlayerMP player) {
     if (getInvasion()) {
-      checkForEnding(getChosenConfig());
+      InvasionConfig config = getChosenConfig();
+      if (checkForEnding(config)) endInvasion(config);
     } else {
       // INFO: For multiple invasions we pick the first match for start conditions
       // and stick with that for the end condition
@@ -241,27 +242,21 @@ public class CWFInvasionsManager {
         && config.dimensionRequired != player.world.provider.getDimension()) return false;
     if (!config.gameStageRequired.isEmpty()
         && !GameStageHelper.hasStage(player, config.gameStageRequired)) return false;
+    long time = world.getWorldTime();
     switch (config.startCondition) {
       case FORTNIGHT:
-        if (world.getTotalWorldTime() % (14 * 24000) == 0) {
-          return true;
-        }
+        if (time % (14 * 24000) == 0) return true;
         break;
       case FULL_MOON:
-        if (world.getMoonPhase() == 0) {
-          return true;
-        }
+        if (world.getMoonPhase() == 0) return true;
         break;
       case NIGHT:
-        long time = world.getWorldTime();
-        if (23000 > time && time > 13000) {
-          return true;
-        }
+        if (23000 > time && time > 13000) return true;
         break;
       case DAY:
-        if (world.getWorldTime() == 0) {
-          return true;
-        }
+        if (time == 0) return true;
+        break;
+      case NEVER:
         break;
     }
     return false;
@@ -271,17 +266,13 @@ public class CWFInvasionsManager {
     List<EntityPlayerMP> players = SERVER.getPlayerList().getPlayers();
     switch (config.endingCondition) {
       case MOBCOUNT:
-        if (data.slainSinceStart / players.size() >= config.mobCountToEnd) {
-          endInvasion(config);
-          return true;
-        }
+        if (data.slainSinceStart / players.size() >= config.mobCountToEnd) return true;
         break;
       case TIME:
         long timeDelta = world.getTotalWorldTime() - data.timeAtStart;
-        if (timeDelta >= config.timeToEndTicks) {
-          endInvasion(config);
-          return true;
-        }
+        if (timeDelta >= config.timeToEndTicks) return true;
+        break;
+      case NEVER:
         break;
     }
     return false;
