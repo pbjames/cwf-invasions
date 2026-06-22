@@ -200,17 +200,18 @@ public class InvasionsManager {
           level.getGameTime(),
           data.cooldownTimeStamp,
           config.cooldownTicks);
-      //return false;
+      // return false;
     }
     // TODO: Update to use tag system
     // if (config.dimensionRequired != -1
     //    && config.dimensionRequired != player.world.provider.getDimension()) return false;
     // if (!config.gameStageRequired.isEmpty()
     //    && !GameStageHelper.hasStage(player, config.gameStageRequired)) return false;
+    long gameTime = level.getGameTime();
     long time = level.getDayTime();
     switch (config.startCondition) {
       case FORTNIGHT:
-        if (time % (14 * DAY_TICKS) == 0) return true;
+        if (gameTime % (14 * DAY_TICKS) == 0) return true;
         break;
       case FULL_MOON:
         if (level.getMoonPhase() == 0) return true;
