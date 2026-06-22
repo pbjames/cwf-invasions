@@ -60,7 +60,7 @@ public class InvasionsManager {
     if (level.getGameTime() % Configuration.COMMON.slowTickTime.get() == 0) {
       players.forEach(player -> checkSetInvasion(player));
     }
-    LOGGER.info("Active mobs: {}", activeMobs);
+    if (level.getGameTime() % 20 == 0) LOGGER.info("Active mobs: {}", activeMobs);
   }
 
   @SubscribeEvent
@@ -82,7 +82,6 @@ public class InvasionsManager {
     LOGGER.info("Invasion starting");
     List<ServerPlayer> players = level.getPlayers((player) -> true);
     players.forEach(player -> player.sendSystemMessage(INVASION_STARTED_MSG));
-    config.__cooldownTSDontChangeMePlz = level.getGameTime();
     data.setNewInvasion(level.getGameTime());
   }
 
@@ -192,14 +191,14 @@ public class InvasionsManager {
   private static boolean checkForStarting(ServerPlayer player, InvasionConfig config) {
     long currentTime = level.getGameTime();
     // INFO: 0 -> stand-in value for whatever the current world time is when we load in
-    if (config.__cooldownTSDontChangeMePlz == 0) config.__cooldownTSDontChangeMePlz = currentTime;
+    if (data.cooldownTimeStamp == 0) data.cooldownTimeStamp = currentTime;
     LOGGER.info("Checking for invasion start");
-    long ticksSinceCooldown = currentTime - config.__cooldownTSDontChangeMePlz;
+    long ticksSinceCooldown = currentTime - data.cooldownTimeStamp;
     if (ticksSinceCooldown < config.cooldownTicks) {
       LOGGER.info(
           "Cooldown active, not invading: {} - {} < {}",
           level.getGameTime(),
-          config.__cooldownTSDontChangeMePlz,
+          data.cooldownTimeStamp,
           config.cooldownTicks);
       return false;
     }

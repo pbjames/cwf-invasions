@@ -19,7 +19,6 @@ public class ManagerDataStore extends SavedData {
     if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
     if (serverLevel.dimension() == Level.OVERWORLD) {
       InvasionsManager.loadServerLevelData(serverLevel);
-      // CWFInvasionsManager.logSelf();
     }
     try {
       InvasionConfigCollection.loadFrom(Invasions.MOD_CONFIG_DIR);
@@ -32,13 +31,15 @@ public class ManagerDataStore extends SavedData {
   public long timeAtStart;
   public int slainSinceStart;
   public String configName;
+  public long cooldownTimeStamp;
 
   public ManagerDataStore(
-      boolean invasionHappeningNow, long timeAtStart, int slainSinceStart, String configName) {
+      boolean invasionHappeningNow, long timeAtStart, int slainSinceStart, int cooldownTimeStamp, String configName) {
     this.invasionHappeningNow = invasionHappeningNow;
     this.timeAtStart = timeAtStart;
     this.slainSinceStart = slainSinceStart;
     this.configName = configName;
+    this.cooldownTimeStamp = cooldownTimeStamp;
   }
 
   public ManagerDataStore() {
@@ -46,20 +47,15 @@ public class ManagerDataStore extends SavedData {
     this.timeAtStart = 0;
     this.slainSinceStart = 0;
     this.configName = "template";
-  }
-
-  public ManagerDataStore(String name) {
-    this.invasionHappeningNow = false;
-    this.timeAtStart = 0;
-    this.slainSinceStart = 0;
-    this.configName = "template";
+    this.cooldownTimeStamp = 0;
   }
 
   public static ManagerDataStore load(CompoundTag tag) {
     ManagerDataStore data = new ManagerDataStore();
     data.invasionHappeningNow = tag.getBoolean("invasionHappeningNow");
-    data.timeAtStart = tag.getInt("timeAtStart");
+    data.timeAtStart = tag.getLong("timeAtStart");
     data.slainSinceStart = tag.getInt("slainSinceStart");
+    data.cooldownTimeStamp = tag.getLong("cooldownTimeStamp");
     data.configName = tag.getString("configName");
     return data;
   }
@@ -76,6 +72,7 @@ public class ManagerDataStore extends SavedData {
     compound.putLong("timeAtStart", timeAtStart);
     compound.putInt("slainSinceStart", slainSinceStart);
     compound.putString("configName", configName == null ? "template" : configName);
+    compound.putLong("cooldownTimeStamp", cooldownTimeStamp);
     return compound;
   }
 
@@ -88,6 +85,7 @@ public class ManagerDataStore extends SavedData {
     invasionHappeningNow = true;
     slainSinceStart = 0;
     timeAtStart = worldTime;
+    cooldownTimeStamp = worldTime;
     setDirty();
   }
 
