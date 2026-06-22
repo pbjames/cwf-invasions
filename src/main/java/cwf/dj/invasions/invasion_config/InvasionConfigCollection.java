@@ -1,4 +1,4 @@
-package cwf.dj.invasion_config;
+package cwf.dj.invasions.invasion_config;
 
 import java.io.File;
 import java.io.FileInputStream;

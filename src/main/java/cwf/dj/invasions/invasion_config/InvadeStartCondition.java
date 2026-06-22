@@ -1,4 +1,4 @@
-package cwf.dj.invasion_config;
+package cwf.dj.invasions.invasion_config;
 
 public enum InvadeStartCondition {
   DAY,
