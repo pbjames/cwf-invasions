@@ -1,15 +1,14 @@
 package cwf.dj.invasions.invasion_config;
 
+import com.electronwill.nightconfig.core.conversion.ObjectConverter;
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import org.yaml.snakeyaml.Yaml;
 
 public class InvasionConfigCollection {
   public static Map<String, InvasionConfig> configs = new HashMap<>();
@@ -17,21 +16,22 @@ public class InvasionConfigCollection {
   public static void loadFrom(Path configDirectory) throws IOException {
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(configDirectory)) {
       for (Path entry : stream) {
-        if (entry.endsWith("template.yml")) continue;
-        FileInputStream iStream = new FileInputStream(entry.toFile());
-        Yaml yaml = new Yaml();
-        InvasionConfig config = yaml.loadAs(iStream, InvasionConfig.class);
+        if (entry.endsWith("template.toml")) continue;
+        CommentedFileConfig fileConfig = CommentedFileConfig.of(entry);
+        fileConfig.load();
+        InvasionConfig config = new ObjectConverter().toObject(fileConfig, InvasionConfig::new);
+        fileConfig.close();
         configs.put(entry.getFileName().toString(), config);
-        iStream.close();
       }
     }
   }
 
   public static void writeTemplate(Path configDirectory) throws IOException {
-    File configFile = configDirectory.resolve("template.yml").toFile();
-    Yaml yaml = new Yaml();
-    try (FileWriter writer = new FileWriter(configFile)) {
-      yaml.dump(new InvasionConfig(), writer);
-    }
+    File configFile = configDirectory.resolve("template.toml").toFile();
+    InvasionConfig myConfig = new InvasionConfig();
+    CommentedFileConfig fileConfig = CommentedFileConfig.of(configFile);
+    new ObjectConverter().toConfig(myConfig, fileConfig);
+    fileConfig.save();
+    fileConfig.close();
   }
 }

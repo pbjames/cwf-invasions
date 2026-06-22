@@ -1,8 +1,9 @@
 package cwf.dj.invasions;
 
 import com.mojang.logging.LogUtils;
-
 import cwf.dj.invasions.invasion_config.InvasionConfigCollection;
+import java.io.IOException;
+import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -14,10 +15,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
-
-import java.io.IOException;
-import java.nio.file.Path;
-
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -27,7 +24,7 @@ public class Invasions {
   public static final String MODID = "invasions";
   // Directly reference a slf4j logger
   public static final Logger LOGGER = LogUtils.getLogger();
-  public static Path MOD_CONFIG_DIR = FMLPaths.CONFIGDIR.get().resolve("invasions");
+  public static final Path MOD_CONFIG_DIR = FMLPaths.CONFIGDIR.get().resolve("invasions");
 
   public Invasions(FMLJavaModLoadingContext context) {
     IEventBus modEventBus = context.getModEventBus();
@@ -35,13 +32,14 @@ public class Invasions {
     context.registerConfig(ModConfig.Type.COMMON, Configuration.COMMON_SPEC);
     context.registerConfig(ModConfig.Type.CLIENT, Configuration.CLIENT_SPEC);
     // Register ourselves for server and other game events we are interested in
-    //MinecraftForge.EVENT_BUS.register(this);
+    // MinecraftForge.EVENT_BUS.register(this);
   }
 
   private void commonSetup(final FMLCommonSetupEvent event) {
     LOGGER.info("HELLO FROM COMMON SETUP");
     if (!MOD_CONFIG_DIR.toFile().exists()) MOD_CONFIG_DIR.toFile().mkdirs();
     try {
+      InvasionConfigCollection.writeTemplate(MOD_CONFIG_DIR);
       InvasionConfigCollection.loadFrom(MOD_CONFIG_DIR);
     } catch (IOException e) {
       e.printStackTrace();

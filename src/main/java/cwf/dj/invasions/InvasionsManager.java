@@ -200,7 +200,7 @@ public class InvasionsManager {
           level.getGameTime(),
           data.cooldownTimeStamp,
           config.cooldownTicks);
-      return false;
+      //return false;
     }
     // TODO: Update to use tag system
     // if (config.dimensionRequired != -1

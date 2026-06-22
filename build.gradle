@@ -1,5 +1,4 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
@@ -124,11 +123,6 @@ repositories {
     // }
 }
 
-configurations {
-    shadow
-    implementation.extendsFrom shadow
-}
-
 dependencies {
     // Specify the version of Minecraft to use.
     // Any artifact can be supplied so long as it has a "userdev" classifier artifact and is a compatible patcher artifact.
@@ -136,7 +130,6 @@ dependencies {
     // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    shadow 'org.yaml:snakeyaml:1.29'
 
     // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
@@ -153,26 +146,6 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 }
-
-shadowJar {
-    // Relocate the library to avoid conflicts with other mods using the same lib
-    relocate 'org.yaml.snakeyaml', 'cwf.dj.shadow.snakeyaml'
-
-    // Use the same archive name as the normal jar
-    archiveClassifier.set('')
-
-    configurations = [project.configurations.shadow]
-
-    // Merge service files if needed (e.g. for some libraries)
-    mergeServiceFiles()
-}
-
-reobf {
-    shadowJar {}
-}
-
-// Make the build task depend on reobfShadowJar
-build.dependsOn reobfShadowJar
 
 // This block of code expands all declared replace properties in the specified resource targets.
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
