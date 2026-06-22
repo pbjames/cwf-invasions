@@ -4,6 +4,8 @@ import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -73,6 +75,8 @@ public class InvadeMobClass {
   }
 
   private void prepareEntityCreature(PathfinderMob creature, ServerPlayer player) {
+    // XXX: Debug feature
+    creature.addEffect(new MobEffectInstance(MobEffects.GLOWING, 10000, 0));
     // creature.targetTasks.addTask(2, new EntityAIOmniSetTarget<ServerPlayer>(creature, player));
     // type.applySpecialTasks(creature, player);
   }

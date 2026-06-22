@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 public class InvasionConfig {
+  // TODO: Making start & end conditions contain their own metadata
   public InvadeStartCondition startCondition = InvadeStartCondition.NIGHT;
   public InvadeEndCondition endingCondition = InvadeEndCondition.MOBCOUNT;
   public int mobCountToEnd = 120;
