@@ -1,5 +1,6 @@
 package cwf.dj.invasions;
 
+import cwf.dj.invasions.integrations.GameStagesCompat;
 import cwf.dj.invasions.invasion_config.InvadeMobClass;
 import cwf.dj.invasions.invasion_config.InvasionConfig;
 import cwf.dj.invasions.invasion_config.InvasionConfigCollection;
@@ -91,8 +92,7 @@ public class InvasionsManager {
     for (ServerPlayer player : players) {
       player.sendSystemMessage(INVASION_ENDED_MSG);
       if (!config.gameStageAwarded.isEmpty()) {
-        // GameStageHelper.addStage(player, config.gameStageAwarded);
-        // GameStageHelper.syncPlayer(player);
+        GameStagesCompat.addStage(player, config.gameStageAwarded);
       }
     }
     data.setEndInvasion();
@@ -205,8 +205,8 @@ public class InvasionsManager {
     // TODO: Update to use tag system
     // if (config.dimensionRequired != -1
     //    && config.dimensionRequired != player.world.provider.getDimension()) return false;
-    // if (!config.gameStageRequired.isEmpty()
-    //    && !GameStageHelper.hasStage(player, config.gameStageRequired)) return false;
+    if (!config.gameStageRequired.isEmpty()
+        && !GameStagesCompat.hasStage(player, config.gameStageRequired)) return false;
     long gameTime = level.getGameTime();
     long time = level.getDayTime();
     switch (config.startCondition) {
