@@ -17,12 +17,9 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
 
-// The value here should match an entry in the META-INF/mods.toml file
 @Mod(Invasions.MODID)
 public class Invasions {
-  // Define mod id in a common place for everything to reference
   public static final String MODID = "invasions";
-  // Directly reference a slf4j logger
   public static final Logger LOGGER = LogUtils.getLogger();
   public static final Path MOD_CONFIG_DIR = FMLPaths.CONFIGDIR.get().resolve("invasions");
 
@@ -33,6 +30,7 @@ public class Invasions {
     context.registerConfig(ModConfig.Type.CLIENT, Configuration.CLIENT_SPEC);
     // Register ourselves for server and other game events we are interested in
     // MinecraftForge.EVENT_BUS.register(this);
+    //
   }
 
   private void commonSetup(final FMLCommonSetupEvent event) {
@@ -49,7 +47,6 @@ public class Invasions {
   // You can use SubscribeEvent and let the Event Bus discover methods to call
   @SubscribeEvent
   public void onServerStarting(ServerStartingEvent event) {
-    // Do something when the server starts
     LOGGER.info("HELLO from server starting");
   }
 
@@ -59,7 +56,6 @@ public class Invasions {
   public static class ClientModEvents {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
-      // Some client setup code
       LOGGER.info("HELLO FROM CLIENT SETUP");
       LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
     }
