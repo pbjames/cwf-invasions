@@ -31,6 +31,22 @@ public class InvasionConfigCollection {
     InvasionConfig myConfig = new InvasionConfig();
     CommentedFileConfig fileConfig = CommentedFileConfig.of(configFile);
     new ObjectConverter().toConfig(myConfig, fileConfig);
+    fileConfig.setComment(
+        "maintainedPopulation", "Upper limit of how many active invasion mobs there can be");
+    fileConfig.setComment(
+        "healthScalingWeight",
+        "Weight multiplier for mob health scaling (relative to other attributes)");
+    fileConfig.setComment(
+        "damageScalingWeight",
+        "Weight multiplier for mob damage scaling (relative to other attributes)");
+    fileConfig.setComment(
+        "totalMobScalingFactor", "Overall scaling factor applied across all weighted attributes");
+    fileConfig.setComment(
+        "startCondition.type",
+        "How the invasion starts (TIME_OF_DAY, EVERY_N_DAYS, GAMESTAGE, DIMENSION, NEVER)");
+    fileConfig.setComment(
+        "endingCondition.type",
+        "How the invasion ends (MOBS_KILLED, TIME_OF_DAY, AFTER_N_DAYS, GAMESTAGE, NEVER)");
     fileConfig.save();
     fileConfig.close();
   }
