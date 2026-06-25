@@ -1,11 +1,13 @@
 package cwf.dj.invasions;
 
 import com.mojang.logging.LogUtils;
+import cwf.dj.invasions.integrations.EAICompat;
 import cwf.dj.invasions.invasion_config.InvasionConfigCollection;
 import java.io.IOException;
 import java.nio.file.Path;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -28,9 +30,8 @@ public class Invasions {
     modEventBus.addListener(this::commonSetup);
     context.registerConfig(ModConfig.Type.COMMON, Configuration.COMMON_SPEC);
     context.registerConfig(ModConfig.Type.CLIENT, Configuration.CLIENT_SPEC);
-    // Register ourselves for server and other game events we are interested in
-    // MinecraftForge.EVENT_BUS.register(this);
-    //
+    if (EAICompat.LOADED)
+      MinecraftForge.EVENT_BUS.register(EAICompat.class);
   }
 
   private void commonSetup(final FMLCommonSetupEvent event) {

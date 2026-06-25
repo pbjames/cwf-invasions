@@ -21,6 +21,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -58,9 +60,8 @@ public class InvasionsManager {
     if (level.getGameTime() % Configuration.COMMON.fastTickTime.get() == 0)
       for (ServerPlayer player : players)
         if (data.invasionHappeningNow) invade(player, players.size());
-    if (level.getGameTime() % Configuration.COMMON.slowTickTime.get() == 0) {
+    if (level.getGameTime() % Configuration.COMMON.slowTickTime.get() == 0)
       players.forEach(player -> checkSetInvasion(player));
-    }
     if (level.getGameTime() % 20 == 0) LOGGER.info("Active mobs: {}", activeMobs);
   }
 
@@ -82,19 +83,24 @@ public class InvasionsManager {
   private static void startInvasion(InvasionConfig config) {
     LOGGER.info("Invasion starting");
     List<ServerPlayer> players = level.getPlayers((player) -> true);
-    players.forEach(player -> player.sendSystemMessage(INVASION_STARTED_MSG));
+    players.forEach(
+        player -> {
+          player.sendSystemMessage(INVASION_STARTED_MSG);
+          player.addEffect(new MobEffectInstance(MobEffects.GLOWING, 65535, 0));
+        });
     data.setNewInvasion(level.getGameTime());
   }
 
   private static void endInvasion(InvasionConfig config) {
     LOGGER.info("Invasion ending");
     List<ServerPlayer> players = level.getPlayers((player) -> true);
-    for (ServerPlayer player : players) {
-      player.sendSystemMessage(INVASION_ENDED_MSG);
-      if (!config.gameStageAwarded.isEmpty()) {
-        GameStagesCompat.addStage(player, config.gameStageAwarded);
-      }
-    }
+    players.forEach(
+        player -> {
+          player.sendSystemMessage(INVASION_ENDED_MSG);
+          player.removeEffect(MobEffects.GLOWING);
+          if (!config.gameStageAwarded.isEmpty())
+            GameStagesCompat.addStage(player, config.gameStageAwarded);
+        });
     data.setEndInvasion();
   }
 

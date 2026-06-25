@@ -1,6 +1,7 @@
 package cwf.dj.invasions.invasion_config;
 
 import javax.annotation.Nullable;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -77,7 +78,6 @@ public class InvadeMobClass {
   private void prepareEntityCreature(PathfinderMob creature, ServerPlayer player) {
     // XXX: Debug feature
     creature.addEffect(new MobEffectInstance(MobEffects.GLOWING, 10000, 0));
-    // creature.targetTasks.addTask(2, new EntityAIOmniSetTarget<ServerPlayer>(creature, player));
-    // type.applySpecialTasks(creature, player);
+    creature.addTag("invasions_type_" + type.name().toLowerCase());
   }
 }
