@@ -12,7 +12,7 @@ public class StartCondition {
   public final int nDaysToStart = 7;
   public final long cooldownTicks = 0;
 
-  public boolean shouldStart(long worldTime, long lastInvasionTime, ServerPlayer player) {
+  public boolean shouldStart(long worldTime, long dayTime, long lastInvasionTime, ServerPlayer player) {
     boolean inDimension =
         player.level().dimension().location().equals(new ResourceLocation(dimensionToStart));
     boolean hasGameStage = GameStagesCompat.hasStage(player, gameStageToStart);
@@ -20,7 +20,7 @@ public class StartCondition {
     if (!gameStageToStart.isEmpty() && !hasGameStage) return false;
     if (cooldownTicks > 0 && (worldTime - lastInvasionTime) <= cooldownTicks) return false;
     return switch (type) {
-      case TIME_OF_DAY -> TimeOfDay.of(worldTime) == timeOfDayToStart;
+      case TIME_OF_DAY -> TimeOfDay.of(dayTime) == timeOfDayToStart;
       case EVERY_N_DAYS -> (worldTime / 24000) % nDaysToStart == 0;
       case GAMESTAGE -> hasGameStage;
       case DIMENSION -> inDimension;

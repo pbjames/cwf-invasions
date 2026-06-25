@@ -13,12 +13,11 @@ public enum TimeOfDay {
     this.ticks = ticks;
   }
 
-  public static TimeOfDay of(long time) {
-    long timeOfDay = time % 24000;
+  public static TimeOfDay of(long dayTime) {
     TimeOfDay closest = SUNRISE;
     long minDiff = Long.MAX_VALUE;
     for (TimeOfDay dt : values()) {
-      long diff = Math.abs(dt.ticks - timeOfDay);
+      long diff = Math.abs(dt.ticks - dayTime);
       if (diff < minDiff) {
         minDiff = diff;
         closest = dt;

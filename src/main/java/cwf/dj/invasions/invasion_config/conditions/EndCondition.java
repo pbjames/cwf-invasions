@@ -10,10 +10,10 @@ public class EndCondition {
   public int mobsKilledToEnd = 100;
   public String gamestageToEnd = "";
 
-  public boolean shouldEnd(long worldTime, int mobsKilled, ServerPlayer player) {
+  public boolean shouldEnd(long worldTime, long dayTime, int mobsKilled, ServerPlayer player) {
     return switch (type) {
       case MOBS_KILLED -> mobsKilled >= mobsKilledToEnd;
-      case TIME_OF_DAY -> TimeOfDay.of(worldTime) == timeOfDayToEnd;
+      case TIME_OF_DAY -> TimeOfDay.of(dayTime) == timeOfDayToEnd;
       case AFTER_N_DAYS -> (worldTime / 24000) % nDaysToEnd == 0;
       case GAMESTAGE -> GameStagesCompat.hasStage(player, gamestageToEnd);
       case NEVER -> false;

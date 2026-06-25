@@ -52,11 +52,12 @@ public class InvasionsManager {
     if (event.phase != Phase.START) return;
     if (level == null) return;
     if (data == null) return;
-    if (level.getGameTime() % Configuration.COMMON.fastTickTime.get() != 0) return;
-    if (level.getGameTime() % Configuration.COMMON.slowTickTime.get() != 0) return;
-    players.addAll(
-        level.getPlayers(p -> true).stream().map(p -> p.getUUID()).collect(Collectors.toSet()));
+    if (level.getGameTime() % Configuration.COMMON.fastTickTime.get() != 0
+        || level.getGameTime() % Configuration.COMMON.slowTickTime.get() != 0) return;
+
     if (level.getGameTime() % Configuration.COMMON.fastTickTime.get() == 0) {
+      players.addAll(
+          level.getPlayers(p -> true).stream().map(p -> p.getUUID()).collect(Collectors.toSet()));
       for (UUID player : players) if (data.invasionHappeningNow) invade(player, players.size());
     }
     if (level.getGameTime() % Configuration.COMMON.slowTickTime.get() == 0) {
@@ -196,20 +197,22 @@ public class InvasionsManager {
 
   private static boolean checkForStarting(UUID playerUUID, InvasionConfig config) {
     long gameTime = level.getGameTime();
+    long dayTime = level.getDayTime();
     data.checkNewGameCooldown(gameTime);
     ServerPlayer player;
     if ((player = resolvePlayer(playerUUID)) != null)
-      return config.startCondition.shouldStart(gameTime, data.cooldownTimeStamp, player);
+      return config.startCondition.shouldStart(gameTime, dayTime, data.cooldownTimeStamp, player);
     return false;
   }
 
   private static boolean checkForEnding(InvasionConfig config) {
-    long currentTime = level.getGameTime();
+    long gameTime = level.getGameTime();
+    long dayTime = level.getDayTime();
     int slainEach = data.slainSinceStart / players.size();
     return players.stream()
         .map(InvasionsManager::resolvePlayer)
         .filter(Objects::nonNull)
-        .anyMatch(player -> config.endingCondition.shouldEnd(currentTime, slainEach, player));
+        .anyMatch(player -> config.endingCondition.shouldEnd(gameTime, dayTime, slainEach, player));
   }
 
   private static List<BlockPos> getNeighborOffsets() {

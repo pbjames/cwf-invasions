@@ -1,14 +1,13 @@
 package cwf.dj.invasions.invasion_config;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
 import cwf.dj.invasions.invasion_config.conditions.EndCondition;
 import cwf.dj.invasions.invasion_config.conditions.StartCondition;
 import cwf.dj.invasions.invasion_config.mobs.MobClass;
 import cwf.dj.invasions.invasion_config.mobs.MobType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 public class InvasionConfig {
   public StartCondition startCondition = new StartCondition();
