@@ -1,7 +1,9 @@
 package cwf.dj.invasions.invasion_config.mobs;
 
+import cwf.dj.invasions.Configuration;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -74,8 +76,11 @@ public class MobClass {
   }
 
   private void prepareEntityCreature(PathfinderMob creature, ServerPlayer player) {
-    // XXX: Debug feature
-    creature.addEffect(new MobEffectInstance(MobEffects.GLOWING, 10000, 0));
+    if (Configuration.COMMON.debug.get()) {
+      creature.addEffect(new MobEffectInstance(MobEffects.GLOWING, 10000, 0));
+      creature.setCustomName(Component.literal(this.toString()));
+      creature.setCustomNameVisible(true);
+    }
     creature.addTag("invasions_type_" + type.name().toLowerCase());
   }
 }

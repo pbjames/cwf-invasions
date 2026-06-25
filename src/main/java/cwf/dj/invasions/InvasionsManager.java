@@ -64,6 +64,7 @@ public class InvasionsManager {
       players.forEach(player -> checkSetInvasion(player));
       players.removeIf(u -> resolvePlayer(u) == null);
     }
+    if (Configuration.COMMON.debug.get()) Invasions.LOGGER.info("Active mobs: " + mobs.toString());
   }
 
   @SubscribeEvent

@@ -3,12 +3,8 @@ package cwf.dj.invasions;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class Configuration {
-
-  // Common config
   public static final ForgeConfigSpec COMMON_SPEC;
   public static final Common COMMON;
-
-  // Client config
   public static final ForgeConfigSpec CLIENT_SPEC;
   public static final Client CLIENT;
 
@@ -26,6 +22,7 @@ public class Configuration {
     public final ForgeConfigSpec.IntValue slowTickTime;
     public final ForgeConfigSpec.IntValue fastTickTime;
     public final ForgeConfigSpec.BooleanValue minersGlow;
+    public final ForgeConfigSpec.BooleanValue debug;
 
     public Common(ForgeConfigSpec.Builder builder) {
       slowTickTime =
@@ -42,6 +39,10 @@ public class Configuration {
           builder
               .comment("Make mining mobs glow to make them easier to spot")
               .define("minersGlow", true);
+      debug =
+          builder
+              .comment("Enable debug mode - logs in the console and everyone glows")
+              .define("debug", false);
     }
   }
 

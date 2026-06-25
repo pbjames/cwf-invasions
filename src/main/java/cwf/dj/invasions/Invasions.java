@@ -5,15 +5,10 @@ import cwf.dj.invasions.integrations.EAICompat;
 import cwf.dj.invasions.invasion_config.InvasionConfigCollection;
 import java.io.IOException;
 import java.nio.file.Path;
-import net.minecraft.client.Minecraft;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -30,12 +25,10 @@ public class Invasions {
     modEventBus.addListener(this::commonSetup);
     context.registerConfig(ModConfig.Type.COMMON, Configuration.COMMON_SPEC);
     context.registerConfig(ModConfig.Type.CLIENT, Configuration.CLIENT_SPEC);
-    if (EAICompat.LOADED)
-      MinecraftForge.EVENT_BUS.register(EAICompat.class);
+    if (EAICompat.LOADED) MinecraftForge.EVENT_BUS.register(EAICompat.class);
   }
 
   private void commonSetup(final FMLCommonSetupEvent event) {
-    LOGGER.info("HELLO FROM COMMON SETUP");
     if (!MOD_CONFIG_DIR.toFile().exists()) MOD_CONFIG_DIR.toFile().mkdirs();
     try {
       InvasionConfigCollection.writeTemplate(MOD_CONFIG_DIR);
@@ -46,19 +39,20 @@ public class Invasions {
   }
 
   // You can use SubscribeEvent and let the Event Bus discover methods to call
-  @SubscribeEvent
-  public void onServerStarting(ServerStartingEvent event) {
-    LOGGER.info("HELLO from server starting");
-  }
+  // @SubscribeEvent
+  // public void onServerStarting(ServerStartingEvent event) {
+  //   LOGGER.info("HELLO from server starting");
+  // }
 
   // You can use EventBusSubscriber to automatically register all static methods in the class
   // annotated with @SubscribeEvent
-  @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-  public static class ClientModEvents {
-    @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-      LOGGER.info("HELLO FROM CLIENT SETUP");
-      LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
-    }
-  }
+  // @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value =
+  // Dist.CLIENT)
+  // public static class ClientModEvents {
+  //   @SubscribeEvent
+  //   public static void onClientSetup(FMLClientSetupEvent event) {
+  //     LOGGER.info("HELLO FROM CLIENT SETUP");
+  //     LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+  //   }
+  // }
 }
