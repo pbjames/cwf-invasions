@@ -84,7 +84,11 @@ public class InvasionsManager {
     setLevel(levelIn);
   }
 
-  private static void startInvasion(InvasionConfig config) {
+  public static ManagerDataStore getData() {
+    return data;
+  }
+
+  public static void startInvasion(InvasionConfig config) {
     players.stream()
         .map(InvasionsManager::resolvePlayer)
         .filter(Objects::nonNull)
@@ -96,7 +100,7 @@ public class InvasionsManager {
     data.setNewInvasion(level.getGameTime());
   }
 
-  private static void endInvasion(InvasionConfig config) {
+  public static void endInvasion(InvasionConfig config) {
     players.stream()
         .map(InvasionsManager::resolvePlayer)
         .filter(Objects::nonNull)
