@@ -43,7 +43,7 @@ public class MobClass {
   @Nullable
   public Entity spawn(
       ServerPlayer player, BlockPos spawnPos, double healthScale, double damageScale) {
-    EntityType<?> entry = ForgeRegistries.ENTITY_TYPES.getValue(new ResourceLocation(ent));
+    EntityType<?> entry = ForgeRegistries.ENTITY_TYPES.getValue(ResourceLocation.parse(ent));
     try {
       Entity realEntity = entry.create(player.level());
       if (realEntity instanceof LivingEntity)

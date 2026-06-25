@@ -12,9 +12,10 @@ public class StartCondition {
   public final int nDaysToStart = 7;
   public final long cooldownTicks = 0;
 
-  public boolean shouldStart(long worldTime, long dayTime, long lastInvasionTime, ServerPlayer player) {
+  public boolean shouldStart(
+      long worldTime, long dayTime, long lastInvasionTime, ServerPlayer player) {
     boolean inDimension =
-        player.level().dimension().location().equals(new ResourceLocation(dimensionToStart));
+        player.level().dimension().location().equals(ResourceLocation.parse(dimensionToStart));
     boolean hasGameStage = GameStagesCompat.hasStage(player, gameStageToStart);
     if (!dimensionToStart.isEmpty() && !inDimension) return false;
     if (!gameStageToStart.isEmpty() && !hasGameStage) return false;
