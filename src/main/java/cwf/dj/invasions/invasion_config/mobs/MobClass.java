@@ -1,7 +1,6 @@
-package cwf.dj.invasions.invasion_config;
+package cwf.dj.invasions.invasion_config.mobs;
 
 import javax.annotation.Nullable;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,16 +14,15 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public class InvadeMobClass {
+public class MobClass {
   public final String ent;
-  public final InvadeMobType type;
+  public final MobType type;
   public final int weight;
   public final int yOffset;
   public final int minDist;
   public final int maxDist;
 
-  public InvadeMobClass(
-      String ent, int weight, InvadeMobType type, int yOffset, int minDist, int maxDist) {
+  public MobClass(String ent, int weight, MobType type, int yOffset, int minDist, int maxDist) {
     this.ent = ent;
     this.weight = weight;
     this.type = type;
@@ -33,10 +31,10 @@ public class InvadeMobClass {
     this.maxDist = maxDist;
   }
 
-  public InvadeMobClass() {
+  public MobClass() {
     this.ent = "default";
     this.weight = 1;
-    this.type = InvadeMobType.CQC;
+    this.type = MobType.CQC;
     this.yOffset = 0;
     this.minDist = 32;
     this.maxDist = 64;

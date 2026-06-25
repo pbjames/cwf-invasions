@@ -1,11 +1,11 @@
-package cwf.dj.invasions.invasion_config;
+package cwf.dj.invasions.invasion_config.mobs;
 
 import cwf.dj.invasions.Configuration;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.PathfinderMob;
 
-public enum InvadeMobType {
+public enum MobType {
   CQC,
   GUNNER,
   MINER;

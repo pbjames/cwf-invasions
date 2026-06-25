@@ -34,7 +34,11 @@ public class ManagerDataStore extends SavedData {
   public long cooldownTimeStamp;
 
   public ManagerDataStore(
-      boolean invasionHappeningNow, long timeAtStart, int slainSinceStart, int cooldownTimeStamp, String configName) {
+      boolean invasionHappeningNow,
+      long timeAtStart,
+      int slainSinceStart,
+      int cooldownTimeStamp,
+      String configName) {
     this.invasionHappeningNow = invasionHappeningNow;
     this.timeAtStart = timeAtStart;
     this.slainSinceStart = slainSinceStart;
@@ -74,6 +78,10 @@ public class ManagerDataStore extends SavedData {
     compound.putString("configName", configName == null ? "template" : configName);
     compound.putLong("cooldownTimeStamp", cooldownTimeStamp);
     return compound;
+  }
+
+  public void checkNewGameCooldown(long gameTime) {
+    if (cooldownTimeStamp == 0) cooldownTimeStamp = gameTime;
   }
 
   public void incrementSlain() {

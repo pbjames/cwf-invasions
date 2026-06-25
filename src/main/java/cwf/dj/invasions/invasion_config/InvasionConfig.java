@@ -5,34 +5,33 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import cwf.dj.invasions.invasion_config.conditions.EndCondition;
+import cwf.dj.invasions.invasion_config.conditions.StartCondition;
+import cwf.dj.invasions.invasion_config.mobs.MobClass;
+import cwf.dj.invasions.invasion_config.mobs.MobType;
+
 public class InvasionConfig {
-  // TODO: Making start & end conditions contain their own metadata
-  public InvadeStartCondition startCondition = InvadeStartCondition.NIGHT;
-  public InvadeEndCondition endingCondition = InvadeEndCondition.MOBCOUNT;
-  public int mobCountToEnd = 120;
-  public int timeToEndTicks = 300 * 20;
+  public StartCondition startCondition = new StartCondition();
+  public EndCondition endingCondition = new EndCondition();
   public int maintainedPopulation = 10;
   public int healthScalingWeight = 2;
   public int damageScalingWeight = 1;
   public int totalMobScalingFactor = 2;
-  public long cooldownTicks = 13000;
-  public int dimensionRequired = 0;
-  public String gameStageRequired = "";
   public String gameStageAwarded = "";
-  public List<InvadeMobClass> mobClasses =
+  public List<MobClass> mobClasses =
       new ArrayList<>(
           Arrays.asList(
-              new InvadeMobClass[] {
-                new InvadeMobClass("minecraft:zombie", 5, InvadeMobType.CQC, 0, 16, 32),
-                new InvadeMobClass("minecraft:skeleton", 1, InvadeMobType.MINER, 0, 30, 40)
+              new MobClass[] {
+                new MobClass("minecraft:zombie", 5, MobType.CQC, 0, 16, 32),
+                new MobClass("minecraft:skeleton", 1, MobType.MINER, 0, 30, 40)
               }));
 
-  public InvadeMobClass pickRandomMobClass() {
+  public MobClass pickRandomMobClass() {
     int totalWeight = 0;
-    for (InvadeMobClass mobClass : mobClasses) totalWeight += mobClass.weight;
+    for (MobClass mobClass : mobClasses) totalWeight += mobClass.weight;
     int selected = new Random().nextInt(totalWeight);
     int runSum = 0;
-    for (InvadeMobClass mobClass : mobClasses) {
+    for (MobClass mobClass : mobClasses) {
       runSum += mobClass.weight;
       if ((selected < runSum) && (selected >= (runSum - mobClass.weight))) return mobClass;
     }
