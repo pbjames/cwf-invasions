@@ -5,11 +5,9 @@ import cwf.dj.invasions.invasion_config.InvasionConfig;
 import cwf.dj.invasions.invasion_config.InvasionConfigCollection;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Random;
@@ -54,7 +52,6 @@ public class InvasionsManager {
     if (data == null) return;
     if (level.getGameTime() % Configuration.COMMON.fastTickTime.get() != 0
         || level.getGameTime() % Configuration.COMMON.slowTickTime.get() != 0) return;
-
     if (level.getGameTime() % Configuration.COMMON.fastTickTime.get() == 0) {
       players.addAll(
           level.getPlayers(p -> true).stream().map(p -> p.getUUID()).collect(Collectors.toSet()));
@@ -131,8 +128,8 @@ public class InvasionsManager {
     int maxDistSq = maxDist * maxDist;
     int minDistSq = minDist * minDist;
     int distDiff = maxDist - minDist;
-    int randomX = RANDOM.nextInt(2 * distDiff) - distDiff + minDist;
-    int randomZ = RANDOM.nextInt(2 * distDiff) - distDiff + minDist;
+    int randomX = (minDist + RANDOM.nextInt(distDiff)) * (RANDOM.nextBoolean() ? -1 : 1);
+    int randomZ = (minDist + RANDOM.nextInt(distDiff)) * (RANDOM.nextBoolean() ? -1 : 1);
     BlockPos start = player.blockPosition();
     Set<BlockPos> visited = new HashSet<>();
     Queue<BlockPos> queue = new LinkedList<>();
@@ -177,7 +174,7 @@ public class InvasionsManager {
       for (InvasionConfig config : InvasionConfigCollection.configs.values()) {
         if (checkForStarting(player, config)) {
           startInvasion(config);
-          data.configName = reverseMap(InvasionConfigCollection.configs).get(config);
+          data.configName = InvasionConfigCollection.keys.get(config);
           data.setDirty();
           return;
         }
@@ -191,13 +188,6 @@ public class InvasionsManager {
 
   private static void setData(ManagerDataStore dataIn) {
     data = dataIn;
-  }
-
-  private static <K, V> Map<V, K> reverseMap(Map<K, V> original) {
-    Map<V, K> reversed = new HashMap<>();
-    for (Map.Entry<K, V> entry : original.entrySet())
-      reversed.put(entry.getValue(), entry.getKey());
-    return reversed;
   }
 
   private static boolean checkForStarting(UUID playerUUID, InvasionConfig config) {

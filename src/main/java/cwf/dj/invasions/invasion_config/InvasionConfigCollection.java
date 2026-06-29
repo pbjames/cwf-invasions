@@ -12,6 +12,7 @@ import java.util.Map;
 
 public class InvasionConfigCollection {
   public static Map<String, InvasionConfig> configs = new HashMap<>();
+  public static Map<InvasionConfig, String> keys = new HashMap<>();
 
   public static void loadFrom(Path configDirectory) throws IOException {
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(configDirectory)) {
@@ -21,7 +22,9 @@ public class InvasionConfigCollection {
         fileConfig.load();
         InvasionConfig config = new ObjectConverter().toObject(fileConfig, InvasionConfig::new);
         fileConfig.close();
-        configs.put(entry.getFileName().toString(), config);
+        String filename = entry.getFileName().toString();
+        configs.put(filename, config);
+        keys.put(config, filename);
       }
     }
   }
